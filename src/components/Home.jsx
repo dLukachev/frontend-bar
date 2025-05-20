@@ -411,7 +411,7 @@ function Home() {
       <div style={{ padding: '0 16px' }}>
         <div style={{
           fontSize: 32,
-          fontWeight: 300,
+          fontWeight: 400,
           color: '#410C00',
           marginBottom: 16,
           fontFamily: 'Tiffany, bold',
@@ -453,7 +453,9 @@ function Home() {
                   <div>
                     <div style={{ fontSize: 12, fontWeight: 500, color: '#410C00', marginBottom: 4, textAlign: 'left', lineHeight: 1.1 }}>{item.name}</div>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 0 }}>
-                      <div style={{ fontSize: 27, fontWeight: 700, color: '#410C00', fontFamily: 'Tiffany, serif', lineHeight: 1 }}>{item.price} ₽</div>
+                      <div style={{ fontSize: 27, fontWeight: 700, color: '#410C00', fontFamily: 'Tiffany, serif', lineHeight: 1 }}>
+                        {Math.floor(item.price)} <img src="/public/icons/rub.svg" alt="₽" style={{ width: 18, height: 17, marginLeft: -1, verticalAlign: '1px', display: 'inline-block' }} />
+                      </div>
                       <div style={{ fontSize: 16, color: '#8B6F53', lineHeight: 1 }}>{item.volume_with_unit}</div>
                     </div>
                   </div>
