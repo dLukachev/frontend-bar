@@ -170,6 +170,8 @@ function Menu({ setTab }) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [activeTab]);
 
+  const cartVisible = cartItems.length > 0;
+
   return (
     <div style={{ background: '#F3ECE4', minHeight: '200vh', paddingBottom: 80, position: 'relative', overflowX: 'hidden' }}>
       <TiffanyFontTag />
@@ -339,26 +341,32 @@ function Menu({ setTab }) {
       </div>
 
       {/* Значок корзины */}
-      <div style={{
-        position: 'fixed',
-        fontFamily: 'Tiffany, serif',
-        right: 16,
-        bottom: 96,
-        background: '#FFFBF7',
-        borderRadius: 16,
-        boxShadow: '0 2px 8px #0001',
-        padding: '8px 18px 8px 18px',
-        display: 'flex',
-        alignItems: 'center',
-        fontSize: 27,
-        fontWeight: 700,
-        color: '#410C00',
-        zIndex: 200,
-        gap: 5,
-        border: '1px solid #E5DED6',
-        cursor: 'pointer',
-      }}
-      onClick={() => setTab && setTab('cart')}
+      <div
+        style={{
+          position: 'fixed',
+          left: 260,
+          bottom: 80,
+          width: 105,
+          background: '#FFFBF7',
+          borderRadius: 16,
+          boxShadow: '0 2px 8px #0001',
+          padding: '8px 18px',
+          display: 'flex',
+          alignItems: 'center',
+          fontSize: 27,
+          fontWeight: 700,
+          color: '#410C00',
+          zIndex: 200,
+          gap: 5,
+          border: '1px solid #E5DED6',
+          cursor: 'pointer',
+          fontFamily: 'Tiffany, serif',
+          transform: cartVisible ? 'translateY(0)' : 'translateY(120%)',
+          opacity: cartVisible ? 1 : 0,
+          pointerEvents: cartVisible ? 'auto' : 'none',
+          transition: 'transform 0.4s cubic-bezier(.4,0,.2,1), opacity 0.3s',
+        }}
+        onClick={() => setTab && setTab('cart')}
       >
         <span>{cartItems.length}</span>
         <span style={{ fontSize: 28, margin: '0 2px' }}>|</span>
