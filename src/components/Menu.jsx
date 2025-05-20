@@ -109,9 +109,12 @@ function Menu({ setTab }) {
   // refs для скролла к категориям
   const categoryRefs = useRef({});
   const observerRef = useRef(null);
+  const scrollTimeoutRef = useRef(null);
+  const isScrollLockedRef = useRef(false);
 
   // Функция для определения активной категории при скролле
   const handleScroll = () => {
+    if (isScrollLockedRef.current) return;
     if (!categories.length) return;
 
     const scrollPosition = window.scrollY + 175; // Устанавливаем отступ в 175 пикселей
@@ -144,12 +147,19 @@ function Menu({ setTab }) {
 
   // Функция для скролла при клике на категорию
   const handleCategoryClick = (categoryId) => {
+    // Отключаем scroll-обработчик на время прокрутки
+    isScrollLockedRef.current = true;
+    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
     setActiveCategory(categoryId);
     const element = categoryRefs.current[categoryId];
     if (element) {
       // При клике скроллим точно к заголовку (offset = 140 для учета фиксированной панели)
       fastScrollTo(element, 140);
     }
+    // Включаем scroll-обработчик через 200 мс (длительность прокрутки)
+    scrollTimeoutRef.current = setTimeout(() => {
+      isScrollLockedRef.current = false;
+    }, 200);
   };
 
   return (
@@ -281,7 +291,7 @@ function Menu({ setTab }) {
                     <div style={{ fontSize: 12, fontWeight: 500, color: '#410C00', marginBottom: 6, textAlign: 'left' }}>{dish.name}</div>
                     <div style={{ fontSize: 27, fontFamily: 'Tiffany, serif', fontWeight: 700, color: '#410C00', marginBottom: 10 }}>
                       {Math.floor(dish.price)} <img src="/public/icons/rub.svg" alt="₽" style={{ width: 18, height: 17, marginLeft: -1, verticalAlign: '1px', display: 'inline-block' }} />
-                      <div style={{ fontSize: 12, color: '#410C00', lineHeight: 1, marginTop: 2 }}>
+                      <div style={{ fontSize: 12, color: '#410C00', lineHeight: 1, marginTop: 2, fontWeight: 400, fontFamily: 'SF Pro Text, Arial, sans-serif' }}>
                         {dish.volume_weight_display}
                       </div>
                     </div>
@@ -306,8 +316,8 @@ function Menu({ setTab }) {
                           transition: 'background 0.2s',
                           padding: 0,
                           lineHeight: 1,
-                          marginTop: 'auto',
                           position: 'static',
+                          marginTop: 'auto',
                         }}
                         onClick={() => addToCart(dish)}
                       >В корзину</button>

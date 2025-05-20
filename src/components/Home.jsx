@@ -455,6 +455,9 @@ function Home() {
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 0 }}>
                       <div style={{ fontSize: 27, fontWeight: 700, color: '#410C00', fontFamily: 'Tiffany, serif', lineHeight: 1 }}>
                         {Math.floor(item.price)} <img src="/public/icons/rub.svg" alt="₽" style={{ width: 18, height: 17, marginLeft: -1, verticalAlign: '1px', display: 'inline-block' }} />
+                        <div style={{ fontSize: 12, color: '#410C00', lineHeight: 1, marginTop: 2, fontWeight: 400, fontFamily: 'SF Pro Text, Arial, sans-serif' }}>
+                          {item.volume_weight_display}
+                        </div>
                       </div>
                       <div style={{ fontSize: 16, color: '#8B6F53', lineHeight: 1 }}>{item.volume_with_unit}</div>
                     </div>
