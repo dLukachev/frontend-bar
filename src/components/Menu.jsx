@@ -310,6 +310,11 @@ function Menu({ setTab }) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [filteredCategories, activeCategory]);
 
+  // Скроллим наверх при смене таба (меню/барная карта)
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [activeTab]);
+
   // Устанавливаем первую категорию при смене таба
   useEffect(() => {
     if (filteredCategories.length > 0) {
