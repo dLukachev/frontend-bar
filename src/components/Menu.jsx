@@ -232,7 +232,7 @@ function Menu({ setTab }) {
                   onClick={() => handleCategoryClick(cat.id)}
                   style={{
                     position: 'relative',
-                    fontSize: 18,
+                    fontSize: 15,
                     fontWeight: activeCategory === cat.id ? 500 : 300,
                     color: activeCategory === cat.id ? '#410C00' : '#8B6F53',
                     cursor: 'pointer',
