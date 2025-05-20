@@ -112,6 +112,9 @@ function Menu({ setTab }) {
   const scrollTimeoutRef = useRef(null);
   const isScrollLockedRef = useRef(false);
 
+  // Фильтрация категорий по типу
+  const filteredCategories = categories.filter(cat => cat.type === activeTab);
+
   // Функция для определения активной категории при скролле
   const handleScroll = () => {
     if (isScrollLockedRef.current) return;
@@ -161,6 +164,11 @@ function Menu({ setTab }) {
       isScrollLockedRef.current = false;
     }, 200);
   };
+
+  console.log('activeTab:', activeTab);
+  console.log('categories:', categories);
+  console.log('filteredCategories:', filteredCategories);
+  console.log('dishes:', dishes);
 
   return (
     <div style={{ background: '#F3ECE4', minHeight: '200vh', paddingBottom: 80, position: 'relative', overflowX: 'hidden' }}>
@@ -226,7 +234,7 @@ function Menu({ setTab }) {
               marginRight: 15,
               paddingBottom: 8
             }}>
-              {categories.map((cat, idx) => (
+              {filteredCategories.map((cat, idx) => (
                 <div
                   key={cat.id}
                   onClick={() => handleCategoryClick(cat.id)}
@@ -240,7 +248,7 @@ function Menu({ setTab }) {
                     paddingBottom: 8,
                     transition: 'color 0.2s',
                     userSelect: 'none',
-                    marginRight: idx === categories.length - 1 ? 15 : 0,
+                    marginRight: idx === filteredCategories.length - 1 ? 15 : 0,
                   }}
                 >
                   {cat.name}
@@ -264,7 +272,7 @@ function Menu({ setTab }) {
 
       {/* Все категории и блюда */}
       <div style={{ paddingTop: 140 }}>
-        {categories.map(cat => (
+        {filteredCategories.map(cat => (
           <div key={cat.id} ref={el => (categoryRefs.current[cat.id] = el)}>
             <div style={{ fontSize: 32, fontWeight: 700, color: '#410C00', fontFamily: 'Tiffany, serif', margin: '0 0 16px 20px', letterSpacing: '0.04em' }}>
               {cat.name}
@@ -287,7 +295,7 @@ function Menu({ setTab }) {
                     justifyContent: 'flex-start',
                     border: '1.5px solid #E5DED6',
                   }}>
-                    <img src={dish.image_url} alt={dish.name} style={{ width: 150, height: 100, objectFit: 'cover', borderRadius: 12, marginBottom: 10, marginLeft: -5, marginTop: -5 }} />
+                    <img src={dish.image_url} alt={dish.name} style={{ width: 150, height: 100, objectFit: 'cover', borderRadius: 7, marginBottom: 10, marginLeft: -5, marginTop: -5 }} />
                     <div style={{ fontSize: 12, fontWeight: 500, color: '#410C00', marginBottom: 6, textAlign: 'left' }}>{dish.name}</div>
                     <div style={{ fontSize: 27, fontFamily: 'Tiffany, serif', fontWeight: 600, color: '#410C00', marginBottom: 10 }}>
                       {Math.floor(dish.price)} <img src="/icons/rub.svg" alt="₽" style={{ width: 18, height: 17, marginLeft: -1, display: 'inline-block' }} />
