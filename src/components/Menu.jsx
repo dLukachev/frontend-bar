@@ -241,7 +241,7 @@ function Menu({ setTab }) {
       <div style={{ paddingTop: 140 }}>
         {categories.map(cat => (
           <div key={cat.id} ref={el => (categoryRefs.current[cat.id] = el)}>
-            <div style={{ fontSize: 32, fontWeight: 700, color: '#6B2F1A', fontFamily: 'serif', margin: '0 0 16px 20px' }}>
+            <div style={{ fontSize: 32, fontWeight: 700, color: '#6B2F1A', fontFamily: 'Tiffany, serif', margin: '0 0 16px 20px' }}>
               {cat.name}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, padding: '0 16px', marginBottom: 32 }}>

@@ -2,6 +2,21 @@ import React, { useState, useRef, useEffect } from 'react';
 import { get } from '../fetch/get';
 import { useApp } from '../context/AppContext';
 
+// Локальное подключение Tiffany только для Home
+const tiffanyFontFace = `
+@font-face {
+  font-family: 'Tiffany';
+  src: url('/fonts/tiffany/tiffany.ttf') format('truetype'),
+       url('/fonts/tiffany/ofont.ru_Tiffany.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+`;
+
+function TiffanyFontTag() {
+  return <style>{tiffanyFontFace}</style>;
+}
+
 // Вставка shimmer-стилей
 const shimmerStyle = `
 @keyframes shimmer {
@@ -71,6 +86,12 @@ const sliderData = [
   },
 ];
 
+const bannerImages = [
+  '/banners/b1.png',
+  '/banners/b2.png',
+  '/banners/b3.png',
+];
+
 function Slider() {
   const [active, setActive] = useState(0);
   const startX = useRef(null);
@@ -91,7 +112,7 @@ function Slider() {
     if (!isDragging.current) return;
     const dx = lastX.current - startX.current;
     if (Math.abs(dx) > 40) {
-      if (dx < 0 && active < sliderData.length - 1) setActive(active + 1);
+      if (dx < 0 && active < bannerImages.length - 1) setActive(active + 1);
       if (dx > 0 && active > 0) setActive(active - 1);
     }
     isDragging.current = false;
@@ -99,16 +120,17 @@ function Slider() {
     lastX.current = null;
   };
 
-  // Центрирование и peek-эффект
-  const cardWidthPx = 330; // фиксированная ширина карточки для мобильного
-  const gap = 16;
+  const cardWidthPx = 340;
+  const cardHeightPx = 190;
+  const borderRadiusPx = 7;
+  const gap = 4;
   const containerStyle = {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
     margin: `0 0 24px 0`,
-    height: 180,
+    height: cardHeightPx,
     touchAction: 'pan-y',
     overflow: 'visible',
   };
@@ -125,8 +147,7 @@ function Slider() {
       onMouseLeave={onTouchEnd}
     >
       <div style={containerStyle}>
-        {sliderData.map((item, idx) => {
-          // Смещение для peek-эффекта
+        {bannerImages.map((img, idx) => {
           const offset = (idx - active) * (cardWidthPx + gap);
           return (
             <div
@@ -135,38 +156,34 @@ function Slider() {
                 width: cardWidthPx,
                 minWidth: cardWidthPx,
                 maxWidth: cardWidthPx,
-                borderRadius: 28,
+                height: cardHeightPx,
+                borderRadius: borderRadiusPx,
                 background: '#2B1B12',
-                color: '#fff',
                 display: 'flex',
                 alignItems: 'center',
                 boxShadow: active === idx ? '0 4px 16px #0002' : '0 2px 8px #0001',
-                padding: '24px 24px 24px 16px',
                 boxSizing: 'border-box',
                 position: 'absolute',
                 left: '50%',
                 top: 0,
-                height: '100%',
                 transform: `translate(-50%, 0) translateX(${offset}px) scale(${active === idx ? 1 : 0.95})`,
                 opacity: Math.abs(idx - active) > 1 ? 0 : 1,
                 zIndex: 10 - Math.abs(idx - active),
                 transition: 'transform 0.4s cubic-bezier(.4,0,.2,1), opacity 0.3s',
                 cursor: 'grab',
+                overflow: 'hidden',
+                padding: 0,
               }}
               onClick={() => setActive(idx)}
             >
-              <img src={item.img} alt={item.title} style={{ width: 150, height: 150, borderRadius: 16, objectFit: 'cover', marginRight: 25, boxShadow: '0 2px 8px #0002' }} />
-              <div>
-                <div style={{ fontSize: 24, fontWeight: 700, marginBottom: 8 }}>{item.title}</div>
-                <div style={{ fontSize: 16 }}>{item.desc}</div>
-              </div>
+              <img src={img} alt={`banner-${idx}`} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: borderRadiusPx }} />
             </div>
           );
         })}
       </div>
       {/* Dots */}
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: -8, marginBottom: 28 }}>
-        {sliderData.map((_, idx) => (
+        {bannerImages.map((_, idx) => (
           <div
             key={idx}
             onClick={() => setActive(idx)}
@@ -349,10 +366,23 @@ function Home() {
 
   return (
     <div style={{ background: '#FDF8F2', minHeight: '100vh', padding: '0 0 80px 0', overflowX: 'hidden' }}>
+      <TiffanyFontTag />
       <ShimmerStyleTag />
       {/* Акции и новости */}
       <div style={{ padding: '24px 16px 0 16px' }}>
-        <div style={{ fontSize: 32, fontWeight: 700, color: '#6B2F1A', marginBottom: 16, fontFamily: 'serif' }}>
+        <div style={{
+          fontSize: 32,
+          fontWeight: 400,
+          color: '#6B2F1A',
+          marginBottom: 16,
+          fontFamily: 'Tiffany, serif',
+          letterSpacing: '0.04em',
+          width: 340,
+          marginLeft: 'auto',
+          marginRight: 'auto',
+          textAlign: 'left',
+          paddingLeft: 0
+        }}>
           Акции и новости
         </div>
         <Slider />
@@ -363,12 +393,15 @@ function Home() {
         <AchievementSkeleton />
       ) : achievement ? (
         <div style={{ background: '#fff', borderRadius: 16, margin: '0 16px 32px', padding: 20, boxShadow: '0 2px 8px #0001' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
             <div>
               <div style={{ fontWeight: 700, fontSize: 22 }}>{achievement.name}</div>
               <div style={{ fontSize: 14, color: '#8B6F53' }}>{achievement.description}</div>
             </div>
-            <div style={{ fontWeight: 700, fontSize: 28, color: '#6B2F1A', textAlign: 'right' }}>+{achievement.required_points}<br /><span style={{ fontSize: 14, color: '#8B6F53', fontWeight: 400 }}>перепелок</span></div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', minWidth: 70, marginTop: 0 }}>
+              <span style={{ fontFamily: 'Tiffany, serif', fontWeight: 400, fontSize: 28, color: '#6B2F1A', lineHeight: 1, marginTop: 0, paddingTop: 0 }}>{'+' + achievement.required_points}</span>
+              <span style={{ fontSize: 14, color: '#8B6F53', fontWeight: 400, marginTop: 0, lineHeight: 1 }}>{'перепелок'}</span>
+            </div>
           </div>
         </div>
       ) : (
@@ -377,7 +410,7 @@ function Home() {
 
       {/* Летние новинки */}
       <div style={{ padding: '0 16px' }}>
-        <div style={{ fontSize: 32, fontWeight: 700, color: '#6B2F1A', marginBottom: 16, fontFamily: 'serif' }}>
+        <div style={{ fontSize: 32, fontWeight: 300, color: '#6B2F1A', marginBottom: 16, fontFamily: 'Tiffany, bold' }}>
           Летние новинки
         </div>
         {noveltyLoading ? (
