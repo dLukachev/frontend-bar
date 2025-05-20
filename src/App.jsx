@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import NavigationBar from './components/NavigationBar';
 import Home from './components/Home';
 import Menu from './components/Menu';
@@ -17,6 +17,10 @@ const TABS = {
 
 function App() {
   const [tab, setTab] = useState(TABS.HOME);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [tab]);
 
   let content;
   switch (tab) {

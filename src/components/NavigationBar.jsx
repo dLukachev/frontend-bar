@@ -82,13 +82,20 @@ const btnStyle = (active) => ({
 });
 
 function NavigationBar({ currentTab, onTabChange }) {
+  const handleTabClick = (key) => {
+    if (currentTab === key) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      onTabChange(key);
+    }
+  };
   return (
     <nav style={navStyle}>
       {tabs.map(tab => (
         <button
           key={tab.key}
           style={btnStyle(currentTab === tab.key)}
-          onClick={() => onTabChange(tab.key)}
+          onClick={() => handleTabClick(tab.key)}
         >
           {tab.icon(currentTab === tab.key)}
         </button>
