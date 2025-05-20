@@ -6,8 +6,7 @@ import { useApp } from '../context/AppContext';
 const tiffanyFontFace = `
 @font-face {
   font-family: 'Tiffany';
-  src: url('/fonts/tiffany/tiffany.ttf') format('truetype'),
-       url('/fonts/tiffany/ofont.ru_Tiffany.ttf') format('truetype');
+  src: url('/fonts/tiffany/tiffany.otf') format('opentype');
   font-weight: 400;
   font-style: normal;
 }
@@ -365,7 +364,7 @@ function Home() {
   } = useApp();
 
   return (
-    <div style={{ background: '#FDF8F2', minHeight: '100vh', padding: '0 0 80px 0', overflowX: 'hidden' }}>
+    <div style={{ background: '#F3ECE4', minHeight: '100vh', padding: '0 0 80px 0', overflowX: 'hidden' }}>
       <TiffanyFontTag />
       <ShimmerStyleTag />
       {/* Акции и новости */}
@@ -373,7 +372,7 @@ function Home() {
         <div style={{
           fontSize: 32,
           fontWeight: 400,
-          color: '#6B2F1A',
+          color: '#410C00',
           marginBottom: 16,
           fontFamily: 'Tiffany, serif',
           letterSpacing: '0.04em',
@@ -392,15 +391,15 @@ function Home() {
       {achievementLoading ? (
         <AchievementSkeleton />
       ) : achievement ? (
-        <div style={{ background: '#fff', borderRadius: 16, margin: '0 16px 32px', padding: 20, boxShadow: '0 2px 8px #0001' }}>
+        <div style={{ background: '#FFFBF7', borderRadius: 16, margin: '0 16px 32px', padding: 20, boxShadow: '0 2px 8px #0001', height: 93, width: 340, marginLeft: 'auto', marginRight: 'auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
             <div>
-              <div style={{ fontWeight: 700, fontSize: 22 }}>{achievement.name}</div>
-              <div style={{ fontSize: 14, color: '#8B6F53' }}>{achievement.description}</div>
+              <div style={{ fontWeight: 700, fontSize: 20, color: '#410C00' }}>{achievement.name}</div>
+              <div style={{ fontSize: 11, color: '#410C00', marginTop: 2 }}>{achievement.description}</div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', minWidth: 70, marginTop: 0 }}>
-              <span style={{ fontFamily: 'Tiffany, serif', fontWeight: 400, fontSize: 28, color: '#6B2F1A', lineHeight: 1, marginTop: 0, paddingTop: 0 }}>{'+' + achievement.required_points}</span>
-              <span style={{ fontSize: 14, color: '#8B6F53', fontWeight: 400, marginTop: 0, lineHeight: 1 }}>{'перепелок'}</span>
+              <span style={{ fontFamily: 'Tiffany, serif', fontWeight: 400, fontSize: 27, color: '#410C00', lineHeight: 1, marginTop: 0, paddingTop: 0 }}>{'+' + achievement.required_points}</span>
+              <span style={{ fontSize: 11, color: '#8B6F53', fontWeight: 400, marginTop: 0, lineHeight: 1 }}>{'перепелок'}</span>
             </div>
           </div>
         </div>
@@ -410,50 +409,87 @@ function Home() {
 
       {/* Летние новинки */}
       <div style={{ padding: '0 16px' }}>
-        <div style={{ fontSize: 32, fontWeight: 300, color: '#6B2F1A', marginBottom: 16, fontFamily: 'Tiffany, bold' }}>
+        <div style={{
+          fontSize: 32,
+          fontWeight: 300,
+          color: '#410C00',
+          marginBottom: 16,
+          fontFamily: 'Tiffany, bold',
+          width: 340,
+          marginLeft: 'auto',
+          marginRight: 'auto',
+          textAlign: 'left',
+          paddingLeft: 0
+        }}>
           Летние новинки
         </div>
         {noveltyLoading ? (
           <SummerNoveltySkeleton />
         ) : noveltyItems.length > 0 ? (
           noveltyItems.map(item => {
-            // Найти товар в корзине
             const inCart = cartItems.find(ci => ci.id === item.id);
             return (
-              <div key={item.id} style={{ display: 'flex', alignItems: 'center', background: '#fff', borderRadius: 16, boxShadow: '0 2px 8px #0001', overflow: 'hidden', padding: 16, marginBottom: 16 }}>
-                <div style={{ flex: '0 0 120px', height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <img src={item.image_url || 'https://via.placeholder.com/112x92?text=No+Image'} alt={item.name} style={{ width: 112, height: 92, objectFit: 'cover', borderRadius: 16 }} />
+              <div key={item.id} style={{
+                width: 340,
+                height: 118,
+                background: '#FFFBF7',
+                borderRadius: 7,
+                boxShadow: '0 2px 8px #0001',
+                display: 'flex',
+                marginLeft: 'auto',
+                marginRight: 'auto',
+                flexDirection: 'row',
+                alignItems: 'stretch',
+                overflow: 'hidden',
+                marginBottom: 16,
+                padding: 0,
+              }}>
+                {/* Фото слева */}
+                <div style={{ flex: '0 0 150px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FFFBF7' }}>
+                  <img src={item.image_url || 'https://s971sas.storage.yandex.net/rdisk/58150832d6adfd3741c1e1ee31764589d809c05f054709e58226adf02f026239/682caa69/OEOWJxOEUzw24FFHQhwUhUO6oxhIvquHlGfDPWJKNziue6YF-owovARHIR2IDDeLq8b9Hdj7b1PM1eGsMVerqA==?uid=0&filename=IMG_20250520_151328_102.jpg&disposition=inline&hash=&limit=0&content_type=image%2Fjpeg&owner_uid=0&fsize=49873&hid=19963f6f7ae29874eda8ea51b944752e&media_type=image&tknv=v3&etag=737218b6e0cb0f8661e617e75bc4f3df&ts=635938b40ac40&s=ebb111f1b901c9c36341e34c54960ff9f8ab731586dd01c10ccfd38355ddafe5&pb=U2FsdGVkX1_JqZ0kpTBeEPSH1dlx1SVRANgDh9uMyI4UhJj-ZD3_OBOt3NBBVii5oDQ-OKE8G_DI-F4p1DUqlQAQx9EpGA9xNcRdXvDB0wQ'} alt={item.name} style={{ width: 150, height: 100, objectFit: 'cover', borderRadius: 7, marginLeft: 10 }} />
                 </div>
-                <div style={{ flex: 1, paddingLeft: 16 }}>
-                  <div style={{ fontSize: 18, fontWeight: 500, marginBottom: 8 }}>{item.name}</div>
-                  <div style={{ fontSize: 22, fontWeight: 700, color: '#6B2F1A', marginBottom: 4 }}>{item.price} ₽ <span style={{ fontSize: 16, color: '#8B6F53', fontWeight: 400 }}>{item.volume_with_unit}</span></div>
-                  {inCart ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
-                      <button onClick={() => changeCartItemCount(item.id, -1)} style={{ width: 36, height: 36, borderRadius: 8, border: '1.5px solid #6B2F1A', background: 'none', color: '#6B2F1A', fontSize: 22, fontWeight: 700, cursor: 'pointer' }}>-</button>
-                      <span style={{ fontSize: 20, fontWeight: 600, minWidth: 28, textAlign: 'center' }}>{inCart.count}</span>
-                      <button onClick={() => changeCartItemCount(item.id, 1)} style={{ width: 36, height: 36, borderRadius: 8, border: '1.5px solid #6B2F1A', background: 'none', color: '#6B2F1A', fontSize: 22, fontWeight: 700, cursor: 'pointer' }}>+</button>
+                {/* Контент справа */}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '12px 16px 12px 16px' }}>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: '#410C00', marginBottom: 4, textAlign: 'left', lineHeight: 1.1 }}>{item.name}</div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 0 }}>
+                      <div style={{ fontSize: 27, fontWeight: 700, color: '#410C00', fontFamily: 'Tiffany, serif', lineHeight: 1 }}>{item.price} ₽</div>
+                      <div style={{ fontSize: 16, color: '#8B6F53', lineHeight: 1 }}>{item.volume_with_unit}</div>
                     </div>
-                  ) : (
-                    <button style={{
-                      marginTop: 8,
-                      width: '100%',
-                      padding: '8px 0',
-                      border: '1.5px solid #6B2F1A',
-                      borderRadius: 8,
-                      background: 'none',
-                      color: '#6B2F1A',
-                      fontWeight: 600,
-                      fontSize: 16,
-                      cursor: 'pointer',
-                      transition: 'background 0.2s',
-                    }} onClick={() => addToCart({
-                      id: item.id,
-                      name: item.name,
-                      price: item.price,
-                      volume: item.volume_with_unit,
-                      img: item.image_url || 'https://via.placeholder.com/112x92?text=No+Image',
-                    })}>В корзину</button>
-                  )}
+                  </div>
+                  <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'flex-end', height: 22 }}>
+                    {inCart ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <button onClick={() => changeCartItemCount(item.id, -1)} style={{ width: 36, height: 22, borderRadius: 8, border: '1.5px solid #6B2F1A', background: 'none', color: '#6B2F1A', fontSize: 18, fontWeight: 700, cursor: 'pointer', lineHeight: 1 }}>-</button>
+                        <span style={{ fontSize: 18, fontWeight: 600, minWidth: 28, textAlign: 'center' }}>{inCart.count}</span>
+                        <button onClick={() => changeCartItemCount(item.id, 1)} style={{ width: 36, height: 22, borderRadius: 8, border: '1.5px solid #6B2F1A', background: 'none', color: '#6B2F1A', fontSize: 18, fontWeight: 700, cursor: 'pointer', lineHeight: 1 }}>+</button>
+                      </div>
+                    ) : (
+                      <button
+                        style={{
+                          width: 140,
+                          height: 22,
+                          border: '1px solid #410C00',
+                          borderRadius: 5,
+                          background: 'none',
+                          color: '#410C00',
+                          fontWeight: 600,
+                          fontSize: 11,
+                          cursor: 'pointer',
+                          transition: 'background 0.2s',
+                          padding: 0,
+                          lineHeight: 1,
+                        }}
+                        onClick={() => addToCart({
+                          id: item.id,
+                          name: item.name,
+                          price: item.price,
+                          volume: item.volume_with_unit,
+                          img: item.image_url || 'https://via.placeholder.com/150x100?text=No+Image',
+                        })}
+                      >В корзину</button>
+                    )}
+                  </div>
                 </div>
               </div>
             );

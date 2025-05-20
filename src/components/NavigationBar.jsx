@@ -1,50 +1,55 @@
 import React from 'react';
+import homeIcon from '/public/icons/home.svg';
+import homeActiveIcon from '/public/icons/home-active.svg';
+import menuIcon from '/public/icons/menu.svg';
+import menuActiveIcon from '/public/icons/menu-active.svg';
+import bookingIcon from '/public/icons/booking.svg';
+import profileIcon from '/public/icons/profile.svg';
+import profileActiveIcon from '/public/icons/profile-active.svg';
 
 const tabs = [
   {
     key: 'home',
     label: 'Главная',
     icon: (active) => (
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M6 14L16 6L26 14V26C26 26.5523 25.5523 27 25 27H7C6.44772 27 6 26.5523 6 26V14Z" fill={active ? '#8B6F53' : 'none'} stroke="#8B6F53" strokeWidth="2"/>
-        <rect x="13" y="19" width="6" height="8" rx="1" fill={active ? '#fff' : 'none'} stroke="#8B6F53" strokeWidth="2"/>
-      </svg>
+      <img
+        src={active ? homeActiveIcon : homeIcon}
+        alt="Главная"
+        style={{ width: '24px', height: '24px' }}
+      />
     )
   },
   {
     key: 'menu',
     label: 'Меню',
     icon: (active) => (
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="6" y="6" width="8" height="8" rx="2" stroke="#8B6F53" strokeWidth="2" fill={active ? '#8B6F53' : 'none'}/>
-        <rect x="18" y="6" width="8" height="8" rx="2" stroke="#8B6F53" strokeWidth="2" fill={active ? '#8B6F53' : 'none'}/>
-        <rect x="6" y="18" width="8" height="8" rx="2" stroke="#8B6F53" strokeWidth="2" fill={active ? '#8B6F53' : 'none'}/>
-        <rect x="18" y="18" width="8" height="8" rx="2" stroke="#8B6F53" strokeWidth="2" fill={active ? '#8B6F53' : 'none'}/>
-      </svg>
+      <img
+        src={active ? menuActiveIcon : menuIcon}
+        alt="Меню"
+        style={{ width: '24px', height: '24px' }}
+      />
     )
   },
   {
     key: 'booking',
     label: 'Бронь',
     icon: (active) => (
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="6" y="8" width="20" height="18" rx="3" stroke="#8B6F53" strokeWidth="2" fill={active ? '#8B6F53' : 'none'}/>
-        <rect x="10" y="14" width="12" height="2" rx="1" fill="#8B6F53"/>
-        <rect x="10" y="18" width="8" height="2" rx="1" fill="#8B6F53"/>
-        <rect x="10" y="22" width="6" height="2" rx="1" fill="#8B6F53"/>
-        <rect x="9" y="4" width="2" height="6" rx="1" fill="#8B6F53"/>
-        <rect x="21" y="4" width="2" height="6" rx="1" fill="#8B6F53"/>
-      </svg>
+      <img
+        src={bookingIcon}
+        alt="Бронь"
+        style={{ width: '24px', height: '24px' }}
+      />
     )
   },
   {
     key: 'profile',
     label: 'Профиль',
     icon: (active) => (
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="16" cy="12" r="6" stroke="#8B6F53" strokeWidth="2" fill={active ? '#8B6F53' : 'none'}/>
-        <rect x="7" y="22" width="18" height="6" rx="3" stroke="#8B6F53" strokeWidth="2" fill={active ? '#8B6F53' : 'none'}/>
-      </svg>
+      <img
+        src={active ? profileActiveIcon : profileIcon}
+        alt="Профиль"
+        style={{ width: '24px', height: '24px' }}
+      />
     )
   }
 ];
