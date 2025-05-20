@@ -38,8 +38,8 @@ function Cart() {
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16, padding: '0 16px' }}>
         {cart.map(item => (
-          <div key={item.id} style={{ background: '#fff', borderRadius: 16, boxShadow: '0 2px 8px #0001', padding: 10, display: 'flex', flexDirection: 'row', alignItems: 'flex-start', minHeight: 120, position: 'relative', maxWidth: 520, width: '100%', margin: '0 auto' }}>
-            <img src={item.img} alt={item.name} style={{ width: 140, height: 100, objectFit: 'cover', borderRadius: 12, marginRight: 18 }} />
+          <div key={item.id} style={{ background: '#fff', borderRadius: 16, boxShadow: '0 2px 8px #0001', padding: 10, display: 'flex', flexDirection: 'row', alignItems: 'stretch', minHeight: 120, position: 'relative', maxWidth: 520, width: '100%', margin: '0 auto' }}>
+            <img src={item.img} alt={item.name} style={{ height: 120, width: 'auto', objectFit: 'cover', borderRadius: 12, marginRight: 18 }} />
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
               <div>
                 <div style={{ fontSize: 16, fontWeight: 500, color: '#3B1707', marginBottom: 6, textAlign: 'left' }}>{item.name}</div>
