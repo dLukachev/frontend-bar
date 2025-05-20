@@ -4,12 +4,14 @@ import Home from './components/Home';
 import Menu from './components/Menu';
 import Booking from './components/Booking';
 import Profile from './components/Profile';
+import Cart from './components/Cart';
 
 const TABS = {
   HOME: 'home',
   MENU: 'menu',
   BOOKING: 'booking',
   PROFILE: 'profile',
+  CART: 'cart',
 };
 
 function App() {
@@ -21,13 +23,16 @@ function App() {
       content = <Home />;
       break;
     case TABS.MENU:
-      content = <Menu />;
+      content = <Menu setTab={setTab} />;
       break;
     case TABS.BOOKING:
       content = <Booking />;
       break;
     case TABS.PROFILE:
       content = <Profile />;
+      break;
+    case TABS.CART:
+      content = <Cart />;
       break;
     default:
       content = <Home />;
