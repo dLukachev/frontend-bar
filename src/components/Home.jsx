@@ -355,13 +355,19 @@ function Home() {
     categories,
     categoriesLoading,
     categoriesError,
-    noveltyItems,
+    dishes,
     noveltyLoading,
     noveltyError,
     cartItems,
     addToCart,
     changeCartItemCount
   } = useApp();
+
+  // Новинки: блюда с type: 'new'
+  const noveltyItems = dishes ? dishes.filter(d => d.category?.type === 'new' && !d.is_archived && !d.category?.is_archived) : [];
+
+  console.log('dishes:', dishes);
+  console.log('noveltyItems:', noveltyItems);
 
   return (
     <div style={{ background: '#F3ECE4', minHeight: '100vh', padding: '0 0 80px 0', overflowX: 'hidden' }}>

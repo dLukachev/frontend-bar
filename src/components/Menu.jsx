@@ -113,7 +113,7 @@ function Menu({ setTab }) {
   const isScrollLockedRef = useRef(false);
 
   // Фильтрация категорий по типу
-  const filteredCategories = categories.filter(cat => cat.type === activeTab);
+  const filteredCategories = categories.filter(cat => cat.type === activeTab && !cat.is_archived);
 
   // Функция для определения активной категории при скролле
   const handleScroll = () => {
@@ -165,10 +165,10 @@ function Menu({ setTab }) {
     }, 200);
   };
 
-  console.log('activeTab:', activeTab);
-  console.log('categories:', categories);
-  console.log('filteredCategories:', filteredCategories);
-  console.log('dishes:', dishes);
+  // Скролл наверх при смене таба (меню/барная карта)
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [activeTab]);
 
   return (
     <div style={{ background: '#F3ECE4', minHeight: '200vh', paddingBottom: 80, position: 'relative', overflowX: 'hidden' }}>
