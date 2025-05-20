@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
-import cartIcon from '/public/icons/cart.svg';
+const cartIcon = '/icons/cart.svg';
 
 // shimmer-стили из Home.jsx
 const shimmerStyle = `
@@ -222,7 +222,7 @@ function ProductBottomSheet({ product, onClose, inCart, onAdd, onChangeCount }) 
         <img src={product.image_url || 'https://s234klg.storage.yandex.net/rdisk/dd165799b546145e86676b0aacac4b2d41f3ea0453ffd577e5e648e46a540f61/682ced58/OEOWJxOEUzw24FFHQhwUhUO6oxhIvquHlGfDPWJKNziue6YF-owovARHIR2IDDeLq8b9Hdj7b1PM1eGsMVerqA==?uid=0&filename=IMG_20250520_151328_102.jpg&disposition=inline&hash=&limit=0&content_type=image%2Fjpeg&owner_uid=0&fsize=49873&hid=19963f6f7ae29874eda8ea51b944752e&media_type=image&tknv=v3&etag=737218b6e0cb0f8661e617e75bc4f3df&ts=6359788940600&s=f33c70d189de2a01bb15ce3c4eadca30d21b002050556e928f8533b292ca1c59&pb=U2FsdGVkX1-I28UKyGRZfUwvGf30w275NNziH45l0lKK9gQk4h8kKuLkkayHvQPC3BQ14PZuG3Hxwzv3PwD4QcrGTB6CkptLTtOl-hK9MnI'} alt={product.name} style={{ width: '100%', maxHeight: 220, objectFit: 'cover', borderRadius: 16, marginBottom: 18 }} />
         <div style={{ fontSize: 26, fontWeight: 600, color: '#410C00', marginBottom: 8 }}>{product.name}</div>
         <div style={{ fontSize: 32, fontWeight: 700, color: '#410C00', fontFamily: 'Tiffany, serif', marginBottom: 8 }}>
-          {Math.floor(product.price)} <span style={{ fontFamily: 'inherit', fontSize: 24 }}>₽</span>
+          {Math.floor(product.price)} <img src="/icons/rub.svg" alt="₽" style={{ width: 18, height: 17, marginLeft: -1, display: 'inline-block' }} />
         </div>
         <div style={{ fontWeight: 600, fontSize: 15, color: '#410C00', marginBottom: 8 }}>Описание:</div>
         <div style={{ fontSize: 15, color: '#410C00', marginBottom: 16 }}>{product.description}</div>

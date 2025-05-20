@@ -5,6 +5,7 @@ import Menu from './components/Menu';
 import Booking from './components/Booking';
 import Profile from './components/Profile';
 import Cart from './components/Cart';
+import Order from './components/Order';
 import { AppProvider } from './context/AppContext';
 
 const TABS = {
@@ -13,6 +14,7 @@ const TABS = {
   BOOKING: 'booking',
   PROFILE: 'profile',
   CART: 'cart',
+  ORDER: 'order',
 };
 
 function App() {
@@ -37,7 +39,10 @@ function App() {
       content = <Profile />;
       break;
     case TABS.CART:
-      content = <Cart />;
+      content = <Cart setTab={setTab} />;
+      break;
+    case TABS.ORDER:
+      content = <Order setTab={setTab} />;
       break;
     default:
       content = <Home />;
