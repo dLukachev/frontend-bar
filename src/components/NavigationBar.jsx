@@ -66,6 +66,7 @@ const navStyle = {
   left: 0,
   right: 0,
   bottom: 0,
+  height: 83,
   zIndex: 100,
 };
 

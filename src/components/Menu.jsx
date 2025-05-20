@@ -340,7 +340,7 @@ function Menu({ setTab }) {
   const cartVisible = cartItems.length > 0;
 
   return (
-    <div style={{ background: '#F3ECE4', minHeight: '200vh', paddingBottom: 80, position: 'relative', overflowX: 'hidden' }}>
+    <div style={{ background: '#F3ECE4', minHeight: '200vh', paddingBottom: 83, position: 'relative', overflowX: 'hidden' }}>
       <TiffanyFontTag />
       <ShimmerStyleTag />
       {/* Табы */}
@@ -517,7 +517,7 @@ function Menu({ setTab }) {
         style={{
           position: 'fixed',
           left: 260,
-          bottom: 80,
+          bottom: 100,
           width: 105,
           background: '#FFFBF7',
           borderRadius: 16,

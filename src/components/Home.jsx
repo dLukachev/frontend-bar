@@ -515,7 +515,7 @@ function Home() {
       {achievementLoading ? (
         <AchievementSkeleton />
       ) : achievement ? (
-        <div style={{ background: '#FFFBF7', borderRadius: 16, margin: '0 16px 32px', padding: 20, boxShadow: '0 2px 8px #0001', height: 93, width: 340, marginLeft: 'auto', marginRight: 'auto' }}>
+        <div style={{ background: '#FFFBF7', borderRadius: 7, margin: '0 16px 32px', padding: 20, boxShadow: '0 2px 8px #0001', height: 93, width: 340, marginLeft: 'auto', marginRight: 'auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
             <div style={{ marginLeft: -7 }}>
               <div style={{ fontWeight: 700, fontSize: 20, color: '#410C00' }}>{achievement.name}</div>
