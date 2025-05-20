@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { get } from '../fetch/get';
 
 // shimmer-стили из Home.jsx
@@ -55,6 +55,26 @@ function DishSkeletonGrid() {
 
 const RESTAURANT_ID = 1;
 
+// Кастомная функция быстрого скролла
+function fastScrollTo(element, offset = 0) {
+  if (!element) return;
+  const targetY = element.getBoundingClientRect().top + window.scrollY - offset;
+  const startY = window.scrollY;
+  const duration = 200; // ms, быстрее чем стандартный smooth
+  const startTime = performance.now();
+
+  function scrollStep(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const ease = progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
+    window.scrollTo(0, startY + (targetY - startY) * ease);
+    if (progress < 1) {
+      requestAnimationFrame(scrollStep);
+    }
+  }
+  requestAnimationFrame(scrollStep);
+}
+
 function Menu({ setTab }) {
   const [activeTab, setActiveTab] = useState('menu');
   const [categories, setCategories] = useState([]);
@@ -65,6 +85,35 @@ function Menu({ setTab }) {
   const [dishesLoading, setDishesLoading] = useState(true);
   const [dishesError, setDishesError] = useState(false);
   const cartCount = 3;
+
+  // refs для скролла к категориям
+  const categoryRefs = useRef({});
+  const observerRef = useRef(null);
+
+  // Функция для определения активной категории при скролле
+  const handleScroll = () => {
+    if (!categories.length) return;
+
+    const scrollPosition = window.scrollY + 175; // Устанавливаем отступ в 175 пикселей
+
+    // Находим текущую категорию на основе позиции скролла
+    for (let i = categories.length - 1; i >= 0; i--) {
+      const category = categories[i];
+      const element = categoryRefs.current[category.id];
+      if (element && element.offsetTop <= scrollPosition) {
+        if (activeCategory !== category.id) {
+          setActiveCategory(category.id);
+        }
+        break;
+      }
+    }
+  };
+
+  // Добавляем и удаляем обработчик скролла
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [categories, activeCategory]);
 
   // Загрузка категорий
   useEffect(() => {
@@ -83,11 +132,10 @@ function Menu({ setTab }) {
       });
   }, []);
 
-  // Загрузка блюд по активной категории
+  // Загружаем все блюда один раз при монтировании
   useEffect(() => {
-    if (!activeCategory) return;
     setDishesLoading(true);
-    get('/menu/items', '', { restaurant_id: RESTAURANT_ID, category_id: activeCategory })
+    get('/menu/items', '', { restaurant_id: RESTAURANT_ID })
       .then(data => {
         setDishes(Array.isArray(data) ? data : []);
         setDishesLoading(false);
@@ -96,127 +144,153 @@ function Menu({ setTab }) {
         setDishesError(true);
         setDishesLoading(false);
       });
-  }, [activeCategory]);
+  }, []);
+
+  // Функция для скролла при клике на категорию
+  const handleCategoryClick = (categoryId) => {
+    setActiveCategory(categoryId);
+    const element = categoryRefs.current[categoryId];
+    if (element) {
+      // При клике скроллим точно к заголовку (offset = 140 для учета фиксированной панели)
+      fastScrollTo(element, 140);
+    }
+  };
 
   return (
     <div style={{ background: '#FDF8F2', minHeight: '200vh', paddingBottom: 80, position: 'relative', overflowX: 'hidden' }}>
       <ShimmerStyleTag />
       {/* Табы */}
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '24px 0 12px 0' }}>
-        <div style={{ display: 'flex', background: '#f6f0e7', borderRadius: 18, boxShadow: '0 2px 8px #0001', padding: 2, width: '80%', justifyContent: 'center', gap: 19 }}>
-          {['menu', 'bar'].map(tabKey => (
-            <button
-              key={tabKey}
-              onClick={() => setActiveTab(tabKey)}
-              style={{
-                outline: 'none',
-                background: activeTab === tabKey ? '#fff' : 'transparent',
-                color: '#3B1707',
-                fontWeight: 700,
-                fontSize: 14,
-                borderRadius: 14,
-                width: '100%',
-                height: 40,
-                textAlign: 'center',
-                padding: '2px 24px',
-                cursor: 'pointer',
-                transition: 'background 0.2s',
-                margin: 0,
-                boxShadow: activeTab === tabKey ? '0 1px 4px #0001' : 'none',
-                border: activeTab === tabKey ? '1.5px solid #e5ded6' : 'none',
-              }}
-            >
-              {tabKey === 'menu' ? 'Меню' : 'Барная карта'}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Категории */}
-      <div style={{ overflowX: 'auto', padding: '0 15px 0 8px', marginBottom: 16 }}>
-        {categoriesLoading ? (
-          <CategorySkeleton />
-        ) : (
-          <div style={{ display: 'flex', gap: 18, marginTop: 10, marginLeft: 15, marginRight: 15 }}>
-            {categories.map((cat, idx) => (
-              <div
-                key={cat.id}
-                onClick={() => setActiveCategory(cat.id)}
+      <div style={{ 
+        position: 'fixed', 
+        top: 0, 
+        left: 0,
+        right: 0,
+        zIndex: 100, 
+        background: '#FDF8F2',
+        borderBottom: '1px solid #e5ded6'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0' }}>
+          <div style={{ display: 'flex', background: '#f6f0e7', borderRadius: 18, boxShadow: '0 2px 8px #0001', padding: 2, width: '80%', justifyContent: 'center', gap: 19 }}>
+            {['menu', 'bar'].map(tabKey => (
+              <button
+                key={tabKey}
+                onClick={() => setActiveTab(tabKey)}
                 style={{
-                  position: 'relative',
-                  fontSize: 18,
-                  fontWeight: activeCategory === cat.id ? 500 : 300,
-                  color: activeCategory === cat.id ? '#3B1707' : '#8B6F53',
+                  outline: 'none',
+                  background: activeTab === tabKey ? '#fff' : 'transparent',
+                  color: '#3B1707',
+                  fontWeight: 700,
+                  fontSize: 14,
+                  borderRadius: 14,
+                  width: '100%',
+                  height: 40,
+                  textAlign: 'center',
+                  padding: '2px 24px',
                   cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  paddingBottom: 8,
-                  transition: 'color 0.2s',
-                  userSelect: 'none',
-                  marginRight: idx === categories.length - 1 ? 15 : 0,
+                  transition: 'background 0.2s',
+                  margin: 0,
+                  boxShadow: activeTab === tabKey ? '0 1px 4px #0001' : 'none',
+                  border: activeTab === tabKey ? '1.5px solid #e5ded6' : 'none',
                 }}
               >
-                {cat.name}
-                {activeCategory === cat.id && (
-                  <div style={{
-                    position: 'absolute',
-                    left: 0,
-                    bottom: 0,
-                    width: '100%',
-                    height: 5,
-                    background: '#3B1707',
-                    borderRadius: 4,
-                  }} />
-                )}
-              </div>
+                {tabKey === 'menu' ? 'Меню' : 'Барная карта'}
+              </button>
             ))}
           </div>
-        )}
+        </div>
+
+        {/* Категории */}
+        <div style={{ 
+          overflowX: 'auto', 
+          padding: '0 15px 0 8px',
+          background: '#FDF8F2',
+          WebkitOverflowScrolling: 'touch',
+          msOverflowStyle: 'none',
+          scrollbarWidth: 'none',
+        }}>
+          {categoriesLoading ? (
+            <CategorySkeleton />
+          ) : (
+            <div style={{ 
+              display: 'flex', 
+              gap: 18, 
+              marginTop: 10, 
+              marginLeft: 15, 
+              marginRight: 15,
+              paddingBottom: 8
+            }}>
+              {categories.map((cat, idx) => (
+                <div
+                  key={cat.id}
+                  onClick={() => handleCategoryClick(cat.id)}
+                  style={{
+                    position: 'relative',
+                    fontSize: 18,
+                    fontWeight: activeCategory === cat.id ? 500 : 300,
+                    color: activeCategory === cat.id ? '#3B1707' : '#8B6F53',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    paddingBottom: 8,
+                    transition: 'color 0.2s',
+                    userSelect: 'none',
+                    marginRight: idx === categories.length - 1 ? 15 : 0,
+                  }}
+                >
+                  {cat.name}
+                  {activeCategory === cat.id && (
+                    <div style={{
+                      position: 'absolute',
+                      left: 0,
+                      bottom: 0,
+                      width: '100%',
+                      height: 5,
+                      background: '#3B1707',
+                      borderRadius: 4,
+                    }} />
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Заголовок категории */}
-      {categoriesLoading ? (
-        <div className="skeleton-shimmer" style={{ width: 180, height: 36, borderRadius: 8, margin: '0 0 16px 20px' }} />
-      ) : (
-        <div style={{ fontSize: 32, fontWeight: 700, color: '#6B2F1A', fontFamily: 'serif', margin: '0 0 16px 20px' }}>
-          {categories.find(c => c.id === activeCategory)?.name}
-        </div>
-      )}
-
-      {/* Сетка блюд */}
-      {dishesLoading ? (
-        <DishSkeletonGrid />
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, padding: '0 16px' }}>
-          {dishes.map(dish => (
-            <div key={dish.id} style={{ background: '#fff', borderRadius: 16, boxShadow: '0 2px 8px #0001', padding: 10, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minHeight: 220, position: 'relative', height: 240, justifyContent: 'flex-start' }}>
-              <img src={dish.img} alt={dish.name} style={{ width: '100%', height: 90, objectFit: 'cover', borderRadius: 12, marginBottom: 10 }} />
-              <div style={{ fontSize: 16, fontWeight: 500, color: '#3B1707', marginBottom: 6, textAlign: 'left' }}>{dish.name}</div>
-              <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10, width: '100%' }}>
-                <div style={{ fontSize: 22, fontWeight: 700, color: '#6B2F1A' }}>
-                  {dish.price} ₽
-                </div>
-                <div style={{ fontSize: 14, color: '#8B6F53' }}>
-                  {dish.volume}
-                </div>
-              </div>
-              <button style={{
-                width: '100%',
-                padding: '7px 0',
-                border: '1.5px solid #6B2F1A',
-                borderRadius: 8,
-                background: 'none',
-                color: '#6B2F1A',
-                fontWeight: 600,
-                fontSize: 15,
-                cursor: 'pointer',
-                transition: 'background 0.2s',
-                marginTop: 'auto',
-                position: 'static',
-              }}>В корзину</button>
+      {/* Все категории и блюда */}
+      <div style={{ paddingTop: 140 }}>
+        {categories.map(cat => (
+          <div key={cat.id} ref={el => (categoryRefs.current[cat.id] = el)}>
+            <div style={{ fontSize: 32, fontWeight: 700, color: '#6B2F1A', fontFamily: 'serif', margin: '0 0 16px 20px' }}>
+              {cat.name}
             </div>
-          ))}
-        </div>
-      )}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, padding: '0 16px', marginBottom: 32 }}>
+              {dishes.filter(dish => dish.category_id === cat.id).map(dish => (
+                <div key={dish.id} style={{ background: '#fff', borderRadius: 16, boxShadow: '0 2px 8px #0001', padding: 10, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minHeight: 220, position: 'relative', height: 240, justifyContent: 'flex-start' }}>
+                  <img src={dish.img} alt={dish.name} style={{ width: '100%', height: 90, objectFit: 'cover', borderRadius: 12, marginBottom: 10 }} />
+                  <div style={{ fontSize: 16, fontWeight: 500, color: '#3B1707', marginBottom: 6, textAlign: 'left' }}>{dish.name}</div>
+                  <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10, width: '100%' }}>
+                    <div style={{ fontSize: 22, fontWeight: 700, color: '#6B2F1A' }}>{dish.price} ₽</div>
+                    <div style={{ fontSize: 14, color: '#8B6F53' }}>{dish.volume}</div>
+                  </div>
+                  <button style={{
+                    width: '100%',
+                    padding: '7px 0',
+                    border: '1.5px solid #6B2F1A',
+                    borderRadius: 8,
+                    background: 'none',
+                    color: '#6B2F1A',
+                    fontWeight: 600,
+                    fontSize: 15,
+                    cursor: 'pointer',
+                    transition: 'background 0.2s',
+                    marginTop: 'auto',
+                    position: 'static',
+                  }}>В корзину</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
 
       {/* Значок корзины */}
       <div style={{
