@@ -89,9 +89,127 @@ function fastScrollTo(element, offset = 0) {
   requestAnimationFrame(scrollStep);
 }
 
+// Bottom sheet для подробной карточки товара
+function ProductBottomSheet({ product, onClose, inCart, onAdd, onChangeCount }) {
+  const [quantity, setQuantity] = React.useState(0);
+  const [isClosing, setIsClosing] = React.useState(false);
+  const [isVisible, setIsVisible] = React.useState(false);
+  
+  React.useEffect(() => { 
+    if (product) {
+      // Если товар в корзине, берем его количество, иначе 0
+      setQuantity(inCart ? inCart.count : 0);
+      setIsClosing(false);
+      requestAnimationFrame(() => {
+        setIsVisible(true);
+      });
+    }
+  }, [product, inCart]);
+
+  const handleClose = () => {
+    setIsClosing(true);
+    setIsVisible(false);
+    setTimeout(() => {
+      onClose();
+    }, 300);
+  };
+
+  const handleQuantityChange = (delta) => {
+    const newQuantity = Math.max(0, quantity + delta);
+    setQuantity(newQuantity);
+    
+    // Если товар в корзине, обновляем количество в корзине
+    if (inCart) {
+      // Если новое количество 0, удаляем товар из корзины
+      if (newQuantity === 0) {
+        onChangeCount(product.id, -inCart.count);
+      } else {
+        // Иначе обновляем количество в корзине
+        const diff = newQuantity - inCart.count;
+        onChangeCount(product.id, diff);
+      }
+    }
+  };
+
+  const handleAddToCart = () => {
+    if (inCart) {
+      // Если товар в корзине, удаляем его
+      onChangeCount(product.id, -inCart.count);
+      setQuantity(0); // Сбрасываем количество до 0 при удалении
+    } else {
+      // Если товар не в корзине, добавляем с выбранным количеством
+      // Если количество 0, добавляем 1
+      const finalQuantity = quantity === 0 ? 1 : quantity;
+      onAdd({...product, quantity: finalQuantity});
+      // Сохраняем выбранное количество после добавления в корзину
+      setQuantity(finalQuantity);
+    }
+  };
+
+  if (!product) return null;
+  return (
+    <>
+      {/* Затемнение фона */}
+      <div onClick={handleClose} style={{
+        position: 'fixed', left: 0, top: 0, right: 0, bottom: 0, zIndex: 999,
+        background: 'rgba(0,0,0,0.25)',
+        opacity: isVisible ? 1 : 0,
+        transition: 'opacity 0.3s ease-in-out',
+      }} />
+      <div style={{
+        position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 1000,
+        background: '#FFFBF7',
+        borderTopLeftRadius: 24, borderTopRightRadius: 24,
+        boxShadow: '0 -4px 24px #0002',
+        minHeight: 320, maxHeight: '90vh',
+        overflowY: 'auto',
+        transform: isVisible ? 'translateY(0)' : 'translateY(100%)',
+        transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        padding: 24,
+        display: 'flex', flexDirection: 'column', alignItems: 'stretch',
+        willChange: 'transform',
+      }}>
+        <img src={product.image_url || 'https://s234klg.storage.yandex.net/rdisk/dd165799b546145e86676b0aacac4b2d41f3ea0453ffd577e5e648e46a540f61/682ced58/OEOWJxOEUzw24FFHQhwUhUO6oxhIvquHlGfDPWJKNziue6YF-owovARHIR2IDDeLq8b9Hdj7b1PM1eGsMVerqA==?uid=0&filename=IMG_20250520_151328_102.jpg&disposition=inline&hash=&limit=0&content_type=image%2Fjpeg&owner_uid=0&fsize=49873&hid=19963f6f7ae29874eda8ea51b944752e&media_type=image&tknv=v3&etag=737218b6e0cb0f8661e617e75bc4f3df&ts=6359788940600&s=f33c70d189de2a01bb15ce3c4eadca30d21b002050556e928f8533b292ca1c59&pb=U2FsdGVkX1-I28UKyGRZfUwvGf30w275NNziH45l0lKK9gQk4h8kKuLkkayHvQPC3BQ14PZuG3Hxwzv3PwD4QcrGTB6CkptLTtOl-hK9MnI'} alt={product.name} style={{ width: '100%', maxHeight: 220, objectFit: 'cover', borderRadius: 16, marginBottom: 18 }} />
+        <div style={{ fontSize: 26, fontWeight: 600, color: '#410C00', marginBottom: 8 }}>{product.name}</div>
+        <div style={{ fontSize: 32, fontWeight: 700, color: '#410C00', fontFamily: 'Tiffany, serif', marginBottom: 8 }}>
+          {Math.floor(product.price)} <span style={{ fontFamily: 'inherit', fontSize: 24 }}>₽</span>
+        </div>
+        <div style={{ fontWeight: 600, fontSize: 15, color: '#410C00', marginBottom: 8 }}>Описание:</div>
+        <div style={{ fontSize: 15, color: '#410C00', marginBottom: 16 }}>{product.description}</div>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 16 }}>
+          {/* -/+ слева */}
+          <div style={{ display: 'flex', alignItems: 'center', border: '2px solid #410C00', borderRadius: 15, padding: '4px 16px', minWidth: 80, justifyContent: 'center', background: '#FFFBF7' }}>
+            <button onClick={() => handleQuantityChange(-1)} style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: '#410C00', color: '#fff', fontSize: 18, fontWeight: 700, cursor: 'pointer', marginRight: 8 }}>-</button>
+            <span style={{ fontSize: 18, fontWeight: 600, minWidth: 24, textAlign: 'center', color: '#410C00' }}>{inCart ? inCart.count : quantity}</span>
+            <button onClick={() => handleQuantityChange(1)} style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: '#410C00', color: '#fff', fontSize: 18, fontWeight: 700, cursor: 'pointer', marginLeft: 8 }}>+</button>
+          </div>
+          {/* Кнопка справа */}
+          <button
+            style={{
+              flex: 1,
+              height: 44,
+              border: 'none',
+              borderRadius: 15,
+              background: inCart ? '#410C00' : '#410C00',
+              color: '#fff',
+              fontWeight: 600,
+              fontSize: 18,
+              cursor: 'pointer',
+              transition: 'background 0.2s',
+            }}
+            onClick={handleAddToCart}
+          >{inCart ? 'Удалить' : 'В корзину'}</button>
+        </div>
+        <button onClick={handleClose} style={{ margin: '0 auto', marginTop: 8, background: 'none', border: 0, color: '#8B6F53', fontSize: 18, cursor: 'pointer' }}>Закрыть</button>
+      </div>
+    </>
+  );
+}
+
 function Menu({ setTab }) {
   const [activeTab, setActiveTab] = useState('menu');
   const [activeCategory, setActiveCategory] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const cartCount = 3;
 
   const {
@@ -296,7 +414,9 @@ function Menu({ setTab }) {
                     width: 164,
                     justifyContent: 'flex-start',
                     border: '1.5px solid #E5DED6',
-                  }}>
+                  }}
+                    onClick={() => setSelectedProduct(dish)}
+                  >
                     <img src={dish.image_url} alt={dish.name} style={{ width: 150, height: 100, objectFit: 'cover', borderRadius: 7, marginBottom: 10, marginLeft: -5, marginTop: -5 }} />
                     <div style={{ fontSize: 12, fontWeight: 500, color: '#410C00', marginBottom: 6, textAlign: 'left' }}>{dish.name}</div>
                     <div style={{ fontSize: 27, fontFamily: 'Tiffany, serif', fontWeight: 600, color: '#410C00', marginBottom: 10 }}>
@@ -305,33 +425,36 @@ function Menu({ setTab }) {
                         {dish.volume_weight_display}
                       </div>
                     </div>
-                    {inCart ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', marginTop: 'auto', background: '#410C00', borderRadius: 5, justifyContent: 'center' }}>
-                        <button onClick={() => changeCartItemCount(dish.id, -1)} style={{ width: 36, height: 22, borderRadius: 8, border: 0, background: 'none', color: '#FFFBF7', fontSize: 18, fontWeight: 500, cursor: 'pointer', lineHeight: 1 }}>-</button>
-                        <span style={{ fontSize: 15, fontWeight: 500, minWidth: 28, textAlign: 'center', color: '#FFFBF7' }}>{inCart.count}</span>
-                        <button onClick={() => changeCartItemCount(dish.id, 1)} style={{ width: 36, height: 22, borderRadius: 8, border: 0, background: 'none', color: '#FFFBF7', fontSize: 18, fontWeight: 500, cursor: 'pointer', lineHeight: 1 }}>+</button>
-                      </div>
-                    ) : (
-                      <button
-                        style={{
-                          width: 140,
-                          height: 22,
-                          border: '1px solid #410C00',
-                          borderRadius: 5,
-                          background: 'none',
-                          color: '#410C00',
-                          fontWeight: 300,
-                          fontSize: 11,
-                          cursor: 'pointer',
-                          transition: 'background 0.2s',
-                          padding: 0,
-                          lineHeight: 1,
-                          position: 'static',
-                          marginTop: 'auto',
-                        }}
-                        onClick={() => addToCart(dish)}
-                      >В корзину</button>
-                    )}
+                    {/* Кнопки -/+ или В корзину */}
+                    <div style={{ marginTop: 'auto', width: '100%' }} onClick={e => e.stopPropagation()}>
+                      {inCart ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', background: '#410C00', borderRadius: 5, justifyContent: 'center' }}>
+                          <button onClick={() => changeCartItemCount(dish.id, -1)} style={{ width: 36, height: 22, borderRadius: 7, border: 0, background: 'none', color: '#FFFBF7', fontSize: 18, fontWeight: 500, cursor: 'pointer', lineHeight: 1 }}>-</button>
+                          <span style={{ fontSize: 15, fontWeight: 500, minWidth: 28, textAlign: 'center', color: '#FFFBF7' }}>{inCart.count}</span>
+                          <button onClick={() => changeCartItemCount(dish.id, 1)} style={{ width: 36, height: 22, borderRadius: 7, border: 0, background: 'none', color: '#FFFBF7', fontSize: 18, fontWeight: 500, cursor: 'pointer', lineHeight: 1 }}>+</button>
+                        </div>
+                      ) : (
+                        <button
+                          style={{
+                            width: '100%',
+                            height: 22,
+                            border: '1px solid #410C00',
+                            borderRadius: 5,
+                            background: 'none',
+                            color: '#410C00',
+                            fontWeight: 300,
+                            fontSize: 11,
+                            cursor: 'pointer',
+                            transition: 'background 0.2s',
+                            padding: 0,
+                            lineHeight: 1,
+                            position: 'static',
+                            marginTop: 'auto',
+                          }}
+                          onClick={() => addToCart(dish)}
+                        >В корзину</button>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -364,7 +487,7 @@ function Menu({ setTab }) {
           transform: cartVisible ? 'translateY(0)' : 'translateY(120%)',
           opacity: cartVisible ? 1 : 0,
           pointerEvents: cartVisible ? 'auto' : 'none',
-          transition: 'transform 0.4s cubic-bezier(.4,0,.2,1), opacity 0.3s',
+          transition: 'transform 0.4s cubic-bezier(.4,0,.2,1), opacity 0.4s',
         }}
         onClick={() => setTab && setTab('cart')}
       >
@@ -372,6 +495,13 @@ function Menu({ setTab }) {
         <span style={{ fontSize: 28, margin: '0 2px' }}>|</span>
         <img src={cartIcon} alt="Корзина" style={{ width: 32, height: 32 }} />
       </div>
+      <ProductBottomSheet
+        product={selectedProduct}
+        onClose={() => setSelectedProduct(null)}
+        inCart={cartItems.find(ci => ci.id === selectedProduct?.id)}
+        onAdd={addToCart}
+        onChangeCount={changeCartItemCount}
+      />
     </div>
   );
 }

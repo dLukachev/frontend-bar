@@ -35,9 +35,9 @@ export function AppProvider({ children }) {
     setCartItems(prev => {
       const existing = prev.find(item => item.id === dish.id);
       if (existing) {
-        return prev.map(item => item.id === dish.id ? { ...item, count: item.count + 1 } : item);
+        return prev.map(item => item.id === dish.id ? { ...item, count: item.count + (dish.quantity || 1) } : item);
       } else {
-        return [...prev, { ...dish, count: 1 }];
+        return [...prev, { ...dish, count: dish.quantity || 1 }];
       }
     });
   };
