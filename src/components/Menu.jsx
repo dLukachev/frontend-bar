@@ -185,27 +185,27 @@ function Menu({ setTab }) {
         borderBottom: '1px solid #E5DED6'
       }}>
         <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0' }}>
-          <div style={{ display: 'flex', background: '#f6f0e7', borderRadius: 18, boxShadow: '0 2px 8px #0001', padding: 2, width: '80%', justifyContent: 'center', gap: 19 }}>
+          <div style={{ display: 'flex', background: '#FFFBF7', borderRadius: 18, boxShadow: '0 2px 8px #0001', padding: 8, width: '338px', height: 48, justifyContent: 'center', gap: 19 }}>
             {['menu', 'bar'].map(tabKey => (
               <button
                 key={tabKey}
                 onClick={() => setActiveTab(tabKey)}
                 style={{
                   outline: 'none',
-                  background: activeTab === tabKey ? '#FFFBF7' : 'transparent',
+                  background: activeTab === tabKey ? '#F3ECE4' : 'transparent',
                   color: activeTab === tabKey ? '#410C00' : '#8B6F53',
-                  fontWeight: 700,
+                  fontWeight: 300,
                   fontSize: 14,
                   borderRadius: 14,
                   width: '100%',
-                  height: 40,
+                  height: 33,
                   textAlign: 'center',
                   padding: '2px 24px',
                   cursor: 'pointer',
                   transition: 'background 0.2s',
                   margin: 0,
                   boxShadow: activeTab === tabKey ? '0 1px 4px #0001' : 'none',
-                  border: activeTab === tabKey ? '1.5px solid #E5DED6' : 'none',
+                  border: 0,
                 }}
               >
                 {tabKey === 'menu' ? 'Меню' : 'Барная карта'}
@@ -318,7 +318,7 @@ function Menu({ setTab }) {
                           borderRadius: 5,
                           background: 'none',
                           color: '#410C00',
-                          fontWeight: 600,
+                          fontWeight: 300,
                           fontSize: 11,
                           cursor: 'pointer',
                           transition: 'background 0.2s',

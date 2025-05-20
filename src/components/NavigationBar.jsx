@@ -4,6 +4,7 @@ import homeActiveIcon from '/public/icons/home-active.svg';
 import menuIcon from '/public/icons/menu.svg';
 import menuActiveIcon from '/public/icons/menu-active.svg';
 import bookingIcon from '/public/icons/booking.svg';
+import bookingActiveIcon from '/public/icons/booking-active.svg';
 import profileIcon from '/public/icons/profile.svg';
 import profileActiveIcon from '/public/icons/profile-active.svg';
 
@@ -35,7 +36,7 @@ const tabs = [
     label: 'Бронь',
     icon: (active) => (
       <img
-        src={bookingIcon}
+        src={active ? bookingActiveIcon : bookingIcon}
         alt="Бронь"
         style={{ width: '24px', height: '24px' }}
       />
