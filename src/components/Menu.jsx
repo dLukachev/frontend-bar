@@ -284,20 +284,23 @@ function Menu({ setTab }) {
   // Функция для определения активной категории при скролле
   const handleScroll = () => {
     if (isScrollLockedRef.current) return;
-    if (!categories.length) return;
+    if (!filteredCategories.length) return;
 
-    const scrollPosition = window.scrollY + 175; // Устанавливаем отступ в 175 пикселей
+    const scrollPosition = window.scrollY + 175;
 
-    // Находим текущую категорию на основе позиции скролла
-    for (let i = categories.length - 1; i >= 0; i--) {
-      const category = categories[i];
+    // Находим первую категорию, которая находится выше текущей позиции скролла
+    let foundCategory = null;
+    for (const category of filteredCategories) {
       const element = categoryRefs.current[category.id];
       if (element && element.offsetTop <= scrollPosition) {
-        if (activeCategory !== category.id) {
-          setActiveCategory(category.id);
-        }
+        foundCategory = category;
+      } else {
         break;
       }
+    }
+
+    if (foundCategory && activeCategory !== foundCategory.id) {
+      setActiveCategory(foundCategory.id);
     }
   };
 
@@ -305,36 +308,34 @@ function Menu({ setTab }) {
   useEffect(() => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [categories, activeCategory]);
+  }, [filteredCategories, activeCategory]);
 
-  // Устанавливаем активную категорию при загрузке категорий
+  // Устанавливаем первую категорию при смене таба
   useEffect(() => {
-    if (categories.length > 0 && !activeCategory) {
-      setActiveCategory(categories[0].id);
+    if (filteredCategories.length > 0) {
+      setActiveCategory(filteredCategories[0].id);
     }
-  }, [categories]);
+  }, [activeTab]);
 
   // Функция для скролла при клике на категорию
   const handleCategoryClick = (categoryId) => {
-    // Отключаем scroll-обработчик на время прокрутки
     isScrollLockedRef.current = true;
     if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
     setActiveCategory(categoryId);
     const element = categoryRefs.current[categoryId];
     if (element) {
-      // При клике скроллим точно к заголовку (offset = 140 для учета фиксированной панели)
       fastScrollTo(element, 140);
     }
-    // Включаем scroll-обработчик через 200 мс (длительность прокрутки)
     scrollTimeoutRef.current = setTimeout(() => {
       isScrollLockedRef.current = false;
     }, 200);
   };
 
-  // Скролл наверх при смене таба (меню/барная карта)
-  useEffect(() => {
+  // Скролл наверх при смене таба
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [activeTab]);
+  };
 
   const cartVisible = cartItems.length > 0;
 
@@ -357,7 +358,7 @@ function Menu({ setTab }) {
             {['menu', 'bar'].map(tabKey => (
               <button
                 key={tabKey}
-                onClick={() => setActiveTab(tabKey)}
+                onClick={() => handleTabChange(tabKey)}
                 style={{
                   outline: 'none',
                   background: activeTab === tabKey ? '#F3ECE4' : 'transparent',
