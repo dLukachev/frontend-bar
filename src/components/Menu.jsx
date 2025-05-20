@@ -174,9 +174,13 @@ function Menu({ setTab }) {
       </div>
 
       {/* Заголовок категории */}
-      <div style={{ fontSize: 32, fontWeight: 700, color: '#6B2F1A', fontFamily: 'serif', margin: '0 0 16px 20px' }}>
-        {categories.find(c => c.id === activeCategory)?.name}
-      </div>
+      {categoriesLoading ? (
+        <div className="skeleton-shimmer" style={{ width: 180, height: 36, borderRadius: 8, margin: '0 0 16px 20px' }} />
+      ) : (
+        <div style={{ fontSize: 32, fontWeight: 700, color: '#6B2F1A', fontFamily: 'serif', margin: '0 0 16px 20px' }}>
+          {categories.find(c => c.id === activeCategory)?.name}
+        </div>
+      )}
 
       {/* Сетка блюд */}
       {dishesLoading ? (
