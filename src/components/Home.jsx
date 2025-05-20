@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { get } from '../fetch/get';
+import { useApp } from '../context/AppContext';
 
 // Вставка shimmer-стилей
 const shimmerStyle = `
@@ -331,63 +332,20 @@ function Home() {
   //   return <EmptyState />;
   // }
 
-  const restaurantId = 1;
-  const [achievement, setAchievement] = useState(null);
-  const [achievementLoading, setAchievementLoading] = useState(true);
-  const [achievementError, setAchievementError] = useState(false);
-
-  const [categories, setCategories] = useState([]);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
-  const [categoriesError, setCategoriesError] = useState(false);
-
-  const [noveltyItems, setNoveltyItems] = useState([]);
-  const [noveltyLoading, setNoveltyLoading] = useState(true);
-  const [noveltyError, setNoveltyError] = useState(false);
-
-  // Достижения
-  useEffect(() => {
-    setAchievementLoading(true);
-    get('/achievements', '')
-      .then(data => {
-        setAchievement(Array.isArray(data) && data.length > 0 ? data[0] : null);
-        setAchievementLoading(false);
-      })
-      .catch(() => {
-        setAchievementError(true);
-        setAchievementLoading(false);
-      });
-  }, []);
-
-  // Категории и летние новинки
-  useEffect(() => {
-    setCategoriesLoading(true);
-    get('/menu/categories', '', { restaurant_id: restaurantId })
-      .then(data => {
-        setCategories(Array.isArray(data) ? data : []);
-        setCategoriesLoading(false);
-      })
-      .catch(() => {
-        setCategoriesError(true);
-        setCategoriesLoading(false);
-      });
-  }, []);
-
-  // Получить блюда по последней категории
-  useEffect(() => {
-    if (!categories.length) return;
-    const lastCategory = categories[categories.length - 1];
-    if (!lastCategory?.id) return;
-    setNoveltyLoading(true);
-    get('/menu/items', '', { restaurant_id: restaurantId, category_id: lastCategory.id })
-      .then(data => {
-        setNoveltyItems(Array.isArray(data) ? data : []);
-        setNoveltyLoading(false);
-      })
-      .catch(() => {
-        setNoveltyError(true);
-        setNoveltyLoading(false);
-      });
-  }, [categories]);
+  const {
+    achievement,
+    achievementLoading,
+    achievementError,
+    categories,
+    categoriesLoading,
+    categoriesError,
+    noveltyItems,
+    noveltyLoading,
+    noveltyError,
+    cartItems,
+    addToCart,
+    changeCartItemCount
+  } = useApp();
 
   return (
     <div style={{ background: '#FDF8F2', minHeight: '100vh', padding: '0 0 80px 0', overflowX: 'hidden' }}>
@@ -412,7 +370,6 @@ function Home() {
             </div>
             <div style={{ fontWeight: 700, fontSize: 28, color: '#6B2F1A', textAlign: 'right' }}>+{achievement.required_points}<br /><span style={{ fontSize: 14, color: '#8B6F53', fontWeight: 400 }}>перепелок</span></div>
           </div>
-          {/* Можно добавить прогресс, если появится */}
         </div>
       ) : (
         <AchievementSkeleton />
@@ -426,30 +383,48 @@ function Home() {
         {noveltyLoading ? (
           <SummerNoveltySkeleton />
         ) : noveltyItems.length > 0 ? (
-          noveltyItems.map(item => (
-            <div key={item.id} style={{ display: 'flex', alignItems: 'center', background: '#fff', borderRadius: 16, boxShadow: '0 2px 8px #0001', overflow: 'hidden', padding: 16, marginBottom: 16 }}>
-              <div style={{ flex: '0 0 120px', height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <img src={item.image_url || 'https://via.placeholder.com/112x92?text=No+Image'} alt={item.name} style={{ width: 112, height: 92, objectFit: 'cover', borderRadius: 16 }} />
+          noveltyItems.map(item => {
+            // Найти товар в корзине
+            const inCart = cartItems.find(ci => ci.id === item.id);
+            return (
+              <div key={item.id} style={{ display: 'flex', alignItems: 'center', background: '#fff', borderRadius: 16, boxShadow: '0 2px 8px #0001', overflow: 'hidden', padding: 16, marginBottom: 16 }}>
+                <div style={{ flex: '0 0 120px', height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <img src={item.image_url || 'https://via.placeholder.com/112x92?text=No+Image'} alt={item.name} style={{ width: 112, height: 92, objectFit: 'cover', borderRadius: 16 }} />
+                </div>
+                <div style={{ flex: 1, paddingLeft: 16 }}>
+                  <div style={{ fontSize: 18, fontWeight: 500, marginBottom: 8 }}>{item.name}</div>
+                  <div style={{ fontSize: 22, fontWeight: 700, color: '#6B2F1A', marginBottom: 4 }}>{item.price} ₽ <span style={{ fontSize: 16, color: '#8B6F53', fontWeight: 400 }}>{item.volume_with_unit}</span></div>
+                  {inCart ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+                      <button onClick={() => changeCartItemCount(item.id, -1)} style={{ width: 36, height: 36, borderRadius: 8, border: '1.5px solid #6B2F1A', background: 'none', color: '#6B2F1A', fontSize: 22, fontWeight: 700, cursor: 'pointer' }}>-</button>
+                      <span style={{ fontSize: 20, fontWeight: 600, minWidth: 28, textAlign: 'center' }}>{inCart.count}</span>
+                      <button onClick={() => changeCartItemCount(item.id, 1)} style={{ width: 36, height: 36, borderRadius: 8, border: '1.5px solid #6B2F1A', background: 'none', color: '#6B2F1A', fontSize: 22, fontWeight: 700, cursor: 'pointer' }}>+</button>
+                    </div>
+                  ) : (
+                    <button style={{
+                      marginTop: 8,
+                      width: '100%',
+                      padding: '8px 0',
+                      border: '1.5px solid #6B2F1A',
+                      borderRadius: 8,
+                      background: 'none',
+                      color: '#6B2F1A',
+                      fontWeight: 600,
+                      fontSize: 16,
+                      cursor: 'pointer',
+                      transition: 'background 0.2s',
+                    }} onClick={() => addToCart({
+                      id: item.id,
+                      name: item.name,
+                      price: item.price,
+                      volume: item.volume_with_unit,
+                      img: item.image_url || 'https://via.placeholder.com/112x92?text=No+Image',
+                    })}>В корзину</button>
+                  )}
+                </div>
               </div>
-              <div style={{ flex: 1, paddingLeft: 16 }}>
-                <div style={{ fontSize: 18, fontWeight: 500, marginBottom: 8 }}>{item.name}</div>
-                <div style={{ fontSize: 22, fontWeight: 700, color: '#6B2F1A', marginBottom: 4 }}>{item.price} ₽ <span style={{ fontSize: 16, color: '#8B6F53', fontWeight: 400 }}>{item.volume_with_unit}</span></div>
-                <button style={{
-                  marginTop: 8,
-                  width: '100%',
-                  padding: '8px 0',
-                  border: '1.5px solid #6B2F1A',
-                  borderRadius: 8,
-                  background: 'none',
-                  color: '#6B2F1A',
-                  fontWeight: 600,
-                  fontSize: 16,
-                  cursor: 'pointer',
-                  transition: 'background 0.2s',
-                }}>В корзину</button>
-              </div>
-            </div>
-          ))
+            );
+          })
         ) : null}
       </div>
     </div>

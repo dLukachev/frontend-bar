@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { get } from '../fetch/get';
+import { useApp } from '../context/AppContext';
 
 // shimmer-стили из Home.jsx
 const shimmerStyle = `
@@ -77,14 +77,20 @@ function fastScrollTo(element, offset = 0) {
 
 function Menu({ setTab }) {
   const [activeTab, setActiveTab] = useState('menu');
-  const [categories, setCategories] = useState([]);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
-  const [categoriesError, setCategoriesError] = useState(false);
   const [activeCategory, setActiveCategory] = useState(null);
-  const [dishes, setDishes] = useState([]);
-  const [dishesLoading, setDishesLoading] = useState(true);
-  const [dishesError, setDishesError] = useState(false);
   const cartCount = 3;
+
+  const {
+    categories,
+    categoriesLoading,
+    categoriesError,
+    dishes,
+    dishesLoading,
+    dishesError,
+    addToCart,
+    cartItems,
+    changeCartItemCount
+  } = useApp();
 
   // refs для скролла к категориям
   const categoryRefs = useRef({});
@@ -115,36 +121,12 @@ function Menu({ setTab }) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [categories, activeCategory]);
 
-  // Загрузка категорий
+  // Устанавливаем активную категорию при загрузке категорий
   useEffect(() => {
-    setCategoriesLoading(true);
-    get('/menu/categories', '', { restaurant_id: RESTAURANT_ID })
-      .then(data => {
-        setCategories(Array.isArray(data) ? data : []);
-        setCategoriesLoading(false);
-        if (Array.isArray(data) && data.length > 0) {
-          setActiveCategory(data[0].id);
-        }
-      })
-      .catch(() => {
-        setCategoriesError(true);
-        setCategoriesLoading(false);
-      });
-  }, []);
-
-  // Загружаем все блюда один раз при монтировании
-  useEffect(() => {
-    setDishesLoading(true);
-    get('/menu/items', '', { restaurant_id: RESTAURANT_ID })
-      .then(data => {
-        setDishes(Array.isArray(data) ? data : []);
-        setDishesLoading(false);
-      })
-      .catch(() => {
-        setDishesError(true);
-        setDishesLoading(false);
-      });
-  }, []);
+    if (categories.length > 0 && !activeCategory) {
+      setActiveCategory(categories[0].id);
+    }
+  }, [categories]);
 
   // Функция для скролла при клике на категорию
   const handleCategoryClick = (categoryId) => {
@@ -263,30 +245,44 @@ function Menu({ setTab }) {
               {cat.name}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, padding: '0 16px', marginBottom: 32 }}>
-              {dishes.filter(dish => dish.category_id === cat.id).map(dish => (
-                <div key={dish.id} style={{ background: '#fff', borderRadius: 16, boxShadow: '0 2px 8px #0001', padding: 10, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minHeight: 220, position: 'relative', height: 240, justifyContent: 'flex-start' }}>
-                  <img src={dish.img} alt={dish.name} style={{ width: '100%', height: 90, objectFit: 'cover', borderRadius: 12, marginBottom: 10 }} />
-                  <div style={{ fontSize: 16, fontWeight: 500, color: '#3B1707', marginBottom: 6, textAlign: 'left' }}>{dish.name}</div>
-                  <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10, width: '100%' }}>
-                    <div style={{ fontSize: 22, fontWeight: 700, color: '#6B2F1A' }}>{dish.price} ₽</div>
-                    <div style={{ fontSize: 14, color: '#8B6F53' }}>{dish.volume}</div>
+              {dishes.filter(dish => dish.category_id === cat.id).map(dish => {
+                const inCart = cartItems.find(ci => ci.id === dish.id);
+                return (
+                  <div key={dish.id} style={{ background: '#fff', borderRadius: 16, boxShadow: '0 2px 8px #0001', padding: 10, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minHeight: 220, position: 'relative', height: 240, justifyContent: 'flex-start' }}>
+                    <img src={dish.img} alt={dish.name} style={{ width: '100%', height: 90, objectFit: 'cover', borderRadius: 12, marginBottom: 10 }} />
+                    <div style={{ fontSize: 16, fontWeight: 500, color: '#3B1707', marginBottom: 6, textAlign: 'left' }}>{dish.name}</div>
+                    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10, width: '100%' }}>
+                      <div style={{ fontSize: 22, fontWeight: 700, color: '#6B2F1A' }}>{dish.price} ₽</div>
+                      <div style={{ fontSize: 14, color: '#8B6F53' }}>{dish.volume}</div>
+                    </div>
+                    {inCart ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', marginTop: 'auto' }}>
+                        <button onClick={() => changeCartItemCount(dish.id, -1)} style={{ width: 36, height: 36, borderRadius: 8, border: '1.5px solid #6B2F1A', background: 'none', color: '#6B2F1A', fontSize: 22, fontWeight: 700, cursor: 'pointer' }}>-</button>
+                        <span style={{ fontSize: 20, fontWeight: 600, minWidth: 28, textAlign: 'center' }}>{inCart.count}</span>
+                        <button onClick={() => changeCartItemCount(dish.id, 1)} style={{ width: 36, height: 36, borderRadius: 8, border: '1.5px solid #6B2F1A', background: 'none', color: '#6B2F1A', fontSize: 22, fontWeight: 700, cursor: 'pointer' }}>+</button>
+                      </div>
+                    ) : (
+                      <button
+                        style={{
+                          width: '100%',
+                          padding: '7px 0',
+                          border: '1.5px solid #6B2F1A',
+                          borderRadius: 8,
+                          background: 'none',
+                          color: '#6B2F1A',
+                          fontWeight: 600,
+                          fontSize: 15,
+                          cursor: 'pointer',
+                          transition: 'background 0.2s',
+                          marginTop: 'auto',
+                          position: 'static',
+                        }}
+                        onClick={() => addToCart(dish)}
+                      >В корзину</button>
+                    )}
                   </div>
-                  <button style={{
-                    width: '100%',
-                    padding: '7px 0',
-                    border: '1.5px solid #6B2F1A',
-                    borderRadius: 8,
-                    background: 'none',
-                    color: '#6B2F1A',
-                    fontWeight: 600,
-                    fontSize: 15,
-                    cursor: 'pointer',
-                    transition: 'background 0.2s',
-                    marginTop: 'auto',
-                    position: 'static',
-                  }}>В корзину</button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         ))}
@@ -313,7 +309,7 @@ function Menu({ setTab }) {
       }}
       onClick={() => setTab && setTab('cart')}
       >
-        <span>{cartCount}</span>
+        <span>{cartItems.length}</span>
         <span style={{ fontSize: 28, margin: '0 2px' }}>|</span>
         <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M8 8H10.6667M10.6667 8H26.6667L24.6667 20H11.3333L10.6667 8ZM10.6667 8L11.3333 20M13.3333 26C14.0697 26 14.6667 25.403 14.6667 24.6667C14.6667 23.9303 14.0697 23.3333 13.3333 23.3333C12.597 23.3333 12 23.9303 12 24.6667C12 25.403 12.597 26 13.3333 26ZM22.6667 26C23.403 26 24 25.403 24 24.6667C24 23.9303 23.403 23.3333 22.6667 23.3333C21.9303 23.3333 21.3333 23.9303 21.3333 24.6667C21.3333 25.403 21.9303 26 22.6667 26Z" stroke="#3B1707" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>

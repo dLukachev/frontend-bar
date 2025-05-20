@@ -5,6 +5,7 @@ import Menu from './components/Menu';
 import Booking from './components/Booking';
 import Profile from './components/Profile';
 import Cart from './components/Cart';
+import { AppProvider } from './context/AppContext';
 
 const TABS = {
   HOME: 'home',
@@ -39,10 +40,12 @@ function App() {
   }
 
   return (
-    <div style={{ paddingBottom: 64 }}>
-      {content}
-      <NavigationBar currentTab={tab} onTabChange={setTab} />
-    </div>
+    <AppProvider>
+      <div style={{ paddingBottom: 64 }}>
+        {content}
+        <NavigationBar currentTab={tab} onTabChange={setTab} />
+      </div>
+    </AppProvider>
   );
 }
 
