@@ -164,7 +164,7 @@ function Profile({ currentTab }) {
           {photoUrl ? (
             <img src={photoUrl} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 24 }} />
           ) : (
-            <svg width="60" height="60" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="22" r="14" fill="#3B1707"/><rect x="10" y="40" width="40" height="16" rx="8" fill="#3B1707"/></svg>
+            <img src="/icons/photo.svg" alt="avatar placeholder" style={{ width: 58, height: 67 }} />
           )}
         </div>
         <div style={{ fontSize: 22, fontWeight: 700, color: '#3B1707', fontFamily: 'SF Pro Text, Arial, sans-serif', marginBottom: 2 }}>{name}</div>
