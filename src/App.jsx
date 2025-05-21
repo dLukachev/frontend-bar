@@ -36,7 +36,7 @@ function App() {
       content = <Booking />;
       break;
     case TABS.PROFILE:
-      content = <Profile />;
+      content = <Profile currentTab={tab} />;
       break;
     case TABS.CART:
       content = <Cart setTab={setTab} />;

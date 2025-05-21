@@ -446,17 +446,17 @@ function ProductBottomSheet({ product, onClose, inCart, onAdd, onChangeCount }) 
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         style={{
-          position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 1000,
-          background: '#FFFBF7',
-          borderTopLeftRadius: 24, borderTopRightRadius: 24,
-          boxShadow: '0 -4px 24px #0002',
-          minHeight: 320, maxHeight: '90vh',
-          overflowY: 'auto',
+        position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 1000,
+        background: '#FFFBF7',
+        borderTopLeftRadius: 24, borderTopRightRadius: 24,
+        boxShadow: '0 -4px 24px #0002',
+        minHeight: 320, maxHeight: '90vh',
+        overflowY: 'auto',
           transform: isVisible ? `translateY(${touchY}px)` : 'translateY(100%)',
           transition: touchStart ? 'none' : 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          padding: 24,
-          display: 'flex', flexDirection: 'column', alignItems: 'stretch',
-          willChange: 'transform',
+        padding: 24,
+        display: 'flex', flexDirection: 'column', alignItems: 'stretch',
+        willChange: 'transform',
           touchAction: 'none',
         }}
       >

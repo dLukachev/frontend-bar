@@ -60,7 +60,7 @@ const navStyle = {
   display: 'flex',
   justifyContent: 'space-around',
   alignItems: 'center',
-  background: '#FDF8F2',
+  background: '#FFFBF7',
   borderTop: '1px solid #E5DED6',
   padding: '8px 24px',
   position: 'fixed',
@@ -89,10 +89,9 @@ function NavigationBar({ currentTab, onTabChange }) {
   const total = cartItems.reduce((sum, item) => sum + (item.price * item.count), 0);
 
   const handleTabClick = (key) => {
+    onTabChange(key);
     if (currentTab === key) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      onTabChange(key);
     }
   };
   return (
