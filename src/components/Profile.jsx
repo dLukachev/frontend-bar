@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { get } from '../fetch/get';
+import EditProfileModal from './EditProfileModal';
 
 function getTelegramInitData() {
   try {
@@ -9,6 +10,108 @@ function getTelegramInitData() {
     }
   } catch {}
   return {};
+}
+
+// Хук для загрузки и кэширования достижений пользователя (кэш 10 минут)
+const achievementsCache = { data: null, timestamp: 0 };
+export function useUserAchievements() {
+  const [achievements, setAchievements] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      setIsLoading(true);
+      setError(false);
+      // Кэш на 10 минут
+      if (achievementsCache.data && Date.now() - achievementsCache.timestamp < 600000) {
+        setAchievements(achievementsCache.data);
+        setIsLoading(false);
+        return;
+      }
+      const initData = window.Telegram?.WebApp?.initData || '';
+      try {
+        const response = await get('/achievements/me/all', initData);
+        if (Array.isArray(response)) {
+          achievementsCache.data = response;
+          achievementsCache.timestamp = Date.now();
+          setAchievements(response);
+        } else {
+          setError(true);
+        }
+      } catch {
+        setError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  return { achievements, isLoading, error };
+}
+
+// Кэш для userData (10 минут)
+const userDataCache = { data: null, timestamp: 0 };
+export function useUserData() {
+  const [userData, setUserData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    let ignore = false;
+    const load = async () => {
+      setIsLoading(true);
+      setError(false);
+      if (userDataCache.data && Date.now() - userDataCache.timestamp < 600000) {
+        setUserData(userDataCache.data);
+        setIsLoading(false);
+        return;
+      }
+      const initData = window.Telegram?.WebApp?.initData || '';
+      try {
+        const response = await get('/users/me', initData);
+        if (response && response.user) {
+          userDataCache.data = response.user;
+          userDataCache.timestamp = Date.now();
+          if (!ignore) setUserData(response.user);
+        } else {
+          if (!ignore) setError(true);
+        }
+      } catch {
+        if (!ignore) setError(true);
+      } finally {
+        if (!ignore) setIsLoading(false);
+      }
+    };
+    load();
+    return () => { ignore = true; };
+  }, []);
+
+  // Функция для сброса кэша и обновления
+  const refresh = async () => {
+    userDataCache.data = null;
+    userDataCache.timestamp = 0;
+    setIsLoading(true);
+    setError(false);
+    const initData = window.Telegram?.WebApp?.initData || '';
+    try {
+      const response = await get('/users/me', initData);
+      if (response && response.user) {
+        userDataCache.data = response.user;
+        userDataCache.timestamp = Date.now();
+        setUserData(response.user);
+      } else {
+        setError(true);
+      }
+    } catch {
+      setError(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return { userData, isLoading, error, refresh };
 }
 
 function QRSection({ onClose }) {
@@ -197,11 +300,191 @@ function QRSection({ onClose }) {
 }
 
 function AchievementsSection({ onClose }) {
-  return <div style={sectionStyle}>
-    <ProfileCloseButton onClick={onClose} />
-    Достижения (заглушка)
-  </div>;
+  const [activeTab, setActiveTab] = useState('achievements'); // 'achievements' or 'collection'
+  const { achievements, isLoading, error } = useUserAchievements();
+  
+  // Progress bar helper function
+  const getProgressWidth = (current, total) => {
+    if (total === 0) return '100%';
+    const percentage = (current / total) * 100;
+    return `${percentage}%`;
+  };
+  
+  return (
+    <div style={{ 
+      background: '#F3ECE4', 
+      minHeight: '100vh', 
+      padding: '16px 16px 83px 16px',
+      boxSizing: 'border-box'
+    }}>
+      <div style={{ 
+        display: 'flex',
+        justifyContent: 'space-between',
+        background: '#F3ECE4',
+        borderRadius: 50, 
+        padding: 4,
+        marginBottom: 20,
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+      }}>
+        <button 
+          onClick={() => setActiveTab('achievements')}
+          style={{
+            flex: 1,
+            padding: '12px 0',
+            background: activeTab === 'achievements' ? '#FFFBF7' : 'transparent',
+            border: 'none',
+            borderRadius: 50,
+            fontWeight: 'bold',
+            color: '#410C00',
+            fontSize: 16,
+            cursor: 'pointer',
+            transition: 'background-color 0.3s'
+          }}
+        >
+          Достижения
+        </button>
+        <button 
+          onClick={() => setActiveTab('collection')}
+          style={{
+            flex: 1,
+            padding: '12px 0',
+            background: activeTab === 'collection' ? '#FFFBF7' : 'transparent',
+            border: 'none',
+            borderRadius: 50,
+            fontWeight: 'bold',
+            color: '#410C00',
+            fontSize: 16,
+            cursor: 'pointer',
+            transition: 'background-color 0.3s'
+          }}
+        >
+          Коллекция
+        </button>
+      </div>
+      
+      <div style={{ 
+        borderBottom: '1px solid #E5DED6', 
+        margin: '0 0 20px 0' 
+      }} />
+      
+      {isLoading ? (
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          padding: '40px 0' 
+        }}>
+          <div>Загрузка...</div>
+        </div>
+      ) : error ? (
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          padding: '40px 0',
+          color: '#8B6F53',
+          textAlign: 'center'
+        }}>
+          <div>Не удалось загрузить достижения</div>
+        </div>
+      ) : achievements.length === 0 ? (
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          padding: '40px 0',
+          color: '#8B6F53',
+          textAlign: 'center'
+        }}>
+          <div>У вас пока нет достижений</div>
+        </div>
+      ) : (
+        <div>
+          {achievements.map((achievement) => (
+            <div 
+              key={achievement.id} 
+              style={{
+                width: 340,
+                height: 93,
+                backgroundColor: '#FFFBF7',
+                borderRadius: 16,
+                padding: '16px 20px',
+                marginBottom: 16,
+                boxSizing: 'border-box',
+                position: 'relative',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+              }}
+            >
+              <div style={{ 
+                display: 'flex',
+                justifyContent: 'space-between',
+                marginBottom: 4
+              }}>
+                <div>
+                  <h3 style={{ 
+                    margin: 0, 
+                    fontSize: 20, 
+                    fontWeight: 'bold',
+                    color: '#410C00',
+                    fontFamily: 'SF Pro Text, sans-serif'
+                  }}>
+                    {achievement.name}
+                  </h3>
+                  <p style={{ 
+                    margin: '4px 0 0 0', 
+                    fontSize: 11, 
+                    color: '#410C00',
+                    fontFamily: 'SF Pro Text, sans-serif'
+                  }}>
+                    {achievement.description}
+                  </p>
+                </div>
+                <div style={{ 
+                  fontSize: 27, 
+                  fontWeight: 400,
+                  color: '#410C00',
+                  fontFamily: 'Tiffany, serif',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-end'
+                }}>
+                  +{achievement.required_points}
+                  <span style={{ 
+                    fontSize: 11, 
+                    color: '#410C00',
+                    fontWeight: 'normal',
+                    fontFamily: 'SF Pro Text, sans-serif'
+                  }}>
+                    перепелок
+                  </span>
+                </div>
+              </div>
+              <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+                {/* Слева текст выполнено, если достижение выполнено */}
+                {achievement.is_earned && (
+                  <span style={{ fontSize: 11, color: '#410C00', minWidth: 80 }}>(Выполненно)</span>
+                )}
+                <div style={{ flex: 1, width: '100%', height: 6, background: '#F3ECE4', borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    width: achievement.is_earned ? '100%' : '0%',
+                    height: '100%',
+                    background: '#410C00',
+                    borderTopLeftRadius: 3,
+                    borderBottomLeftRadius: 3,
+                    borderTopRightRadius: achievement.is_earned ? 0 : 3,
+                    borderBottomRightRadius: achievement.is_earned ? 0 : 3
+                  }} />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      
+      <ProfileCloseButton onClick={onClose} />
+    </div>
+  );
 }
+
 function AboutSection({ onClose }) {
   return <div style={sectionStyle}>
     <ProfileCloseButton onClick={onClose} />
@@ -291,10 +574,12 @@ function ProfileButton({ icon, text, onClick, rightElement }) {
 function Profile({ currentTab }) {
   const [activeSection, setActiveSection] = useState('main');
   const [showQRModal, setShowQRModal] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false);
   const tgUser = useMemo(getTelegramInitData, []);
   const name = tgUser.first_name || tgUser.last_name ? `${tgUser.first_name || ''} ${tgUser.last_name || ''}`.trim() : 'Не определено';
   const username = tgUser.username ? `@${tgUser.username}` : 'Не определено';
   const photoUrl = tgUser.photo_url;
+  const { userData, isLoading, error, refresh } = useUserData();
 
   // Возврат на главную страницу профиля при повторном выборе таба 'profile'
   useEffect(() => {
@@ -302,6 +587,8 @@ function Profile({ currentTab }) {
       setActiveSection('main');
     }
   }, [currentTab]);
+  
+  console.log('Profile activeSection:', activeSection);
 
   if (activeSection === 'achievements') return <AchievementsSection onClose={() => setActiveSection('main')} />;
   if (activeSection === 'about') return <AboutSection onClose={() => setActiveSection('main')} />;
@@ -376,7 +663,7 @@ function Profile({ currentTab }) {
           <ProfileButton 
             icon={<img src="/icons/Info.svg" alt="Обо мне" style={{ width: 24, height: 24 }} />} 
             text={<span style={{ fontWeight: 300, fontFamily: 'SF Pro Text, sans-serif', letterSpacing: 0, fontSize: 16 }}>Обо мне</span>} 
-            onClick={() => setActiveSection('about')} 
+            onClick={() => setShowEditProfile(true)} 
           />
           <ProfileButton 
             icon={<img src="/icons/list.svg" alt="История заказов" style={{ width: 24, height: 24 }} />} 
@@ -398,6 +685,10 @@ function Profile({ currentTab }) {
       
       {/* QR Modal */}
       {showQRModal && <QRModal onClose={() => setShowQRModal(false)} />}
+      {/* Edit Profile Modal */}
+      {showEditProfile && (
+        <EditProfileModal onClose={() => { setShowEditProfile(false); refresh(); }} initialData={userData} />
+      )}
     </div>
   );
 }

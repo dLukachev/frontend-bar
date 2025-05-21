@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { get } from '../fetch/get';
 import { useApp } from '../context/AppContext';
+import { useUserAchievements } from './Profile';
 
 // Локальное подключение Tiffany только для Home
 const tiffanyFontFace = `
@@ -564,6 +565,22 @@ function Home() {
     changeCartItemCount
   } = useApp();
 
+  // Новое: достижения пользователя
+  const { achievements: userAchievements, isLoading: achievementsLoading } = useUserAchievements();
+  // Фильтруем только невыполненные
+  const unearned = userAchievements ? userAchievements.filter(a => !a.is_earned) : [];
+  // Сохраняем выбор только один раз
+  const [randomAchievement, setRandomAchievement] = useState(null);
+  useEffect(() => {
+    if (unearned.length > 0 && !randomAchievement) {
+      setRandomAchievement(unearned[Math.floor(Math.random() * unearned.length)]);
+    }
+    if (unearned.length === 0 && randomAchievement) {
+      setRandomAchievement(null);
+    }
+    // eslint-disable-next-line
+  }, [achievementsLoading]);
+
   // Новинки: блюда с type: 'new'
   const noveltyItems = dishes ? dishes.filter(d => d.category?.type === 'new' && !d.is_archived && !d.category?.is_archived) : [];
 
@@ -594,25 +611,40 @@ function Home() {
         <Slider />
       </div>
 
-      {/* Знаток настоек (достижение) */}
-      {achievementLoading ? (
+      {/* Случайное невыполненное достижение пользователя */}
+      {achievementsLoading ? (
         <AchievementSkeleton />
-      ) : achievement ? (
-        <div style={{ background: '#FFFBF7', borderRadius: 7, margin: '0 16px 32px', padding: 20, boxShadow: '0 2px 8px #0001', height: 93, width: 340, marginLeft: 'auto', marginRight: 'auto' }}>
+      ) : randomAchievement ? (
+        <div style={{ background: '#FFFBF7', borderRadius: 16, margin: '0 16px 32px', padding: 20, boxShadow: '0 2px 8px #0001', height: 93, width: 340, marginLeft: 'auto', marginRight: 'auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
             <div style={{ marginLeft: -7 }}>
-              <div style={{ fontWeight: 700, fontSize: 20, color: '#410C00' }}>{achievement.name}</div>
-              <div style={{ fontSize: 11, color: '#410C00', marginTop: 2 }}>{achievement.description}</div>
+              <div style={{ fontWeight: 700, fontSize: 20, color: '#410C00' }}>{randomAchievement.name}</div>
+              <div style={{ fontSize: 11, color: '#410C00', marginTop: 2 }}>{randomAchievement.description}</div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', minWidth: 70, marginTop: 0 }}>
-              <span style={{ fontFamily: 'Tiffany, serif', fontWeight: 400, fontSize: 27, color: '#410C00', lineHeight: 1, marginTop: 0, paddingTop: 0 }}>{'+' + achievement.required_points}</span>
+              <span style={{ fontFamily: 'Tiffany, serif', fontWeight: 400, fontSize: 27, color: '#410C00', lineHeight: 1, marginTop: 0, paddingTop: 0 }}>{'+' + randomAchievement.required_points}</span>
               <span style={{ fontSize: 11, color: '#8B6F53', fontWeight: 400, marginTop: 0, lineHeight: 1 }}>{'перепелок'}</span>
             </div>
           </div>
+          <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+            {/* Слева текст выполнено, если достижение выполнено */}
+            {randomAchievement.is_earned && (
+              <span style={{ fontSize: 11, color: '#410C00', minWidth: 80 }}>(Выполненно)</span>
+            )}
+            <div style={{ flex: 1, width: '100%', height: 6, background: '#F3ECE4', borderRadius: 3, overflow: 'hidden' }}>
+              <div style={{
+                width: randomAchievement.is_earned ? '100%' : '0%',
+                height: '100%',
+                background: '#410C00',
+                borderTopLeftRadius: 3,
+                borderBottomLeftRadius: 3,
+                borderTopRightRadius: randomAchievement.is_earned ? 0 : 3,
+                borderBottomRightRadius: randomAchievement.is_earned ? 0 : 3
+              }} />
+            </div>
+          </div>
         </div>
-      ) : (
-        <AchievementSkeleton />
-      )}
+      ) : null}
 
       {/* Летние новинки */}
       <div style={{ padding: '0 16px' }}>
