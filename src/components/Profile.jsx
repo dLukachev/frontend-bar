@@ -162,7 +162,7 @@ function Profile({ currentTab }) {
           marginTop: -75,
         }}>
           {photoUrl ? (
-            <img src={photoUrl} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 20 }} />
+            <img src={photoUrl} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (
             <img src="/icons/photo.svg" alt="avatar placeholder" style={{ width: 58, height: 67 }} />
           )}
