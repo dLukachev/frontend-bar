@@ -45,6 +45,25 @@ function EditProfileModal({ onClose, initialData }) {
     requestAnimationFrame(() => setIsVisible(true));
   }, []);
 
+  // Навешиваем touchmove с passive: false
+  useEffect(() => {
+    const sheet = sheetRef.current;
+    if (!sheet) return;
+    const handleMove = (e) => {
+      if (!touchStart) return;
+      const currentY = e.touches[0].clientY;
+      const diff = currentY - touchStart;
+      if (diff > 0) {
+        setTouchY(diff);
+        e.preventDefault();
+      }
+    };
+    sheet.addEventListener('touchmove', handleMove, { passive: false });
+    return () => {
+      sheet.removeEventListener('touchmove', handleMove);
+    };
+  }, [touchStart]);
+
   // Обновлять форму при появлении initialData (только если данные изменились)
   useEffect(() => {
     if (initialData) {
@@ -72,15 +91,6 @@ function EditProfileModal({ onClose, initialData }) {
     if (y - sheetTop > 50) return;
     setTouchStart(y);
     setTouchY(0);
-  };
-  const handleTouchMove = (e) => {
-    if (!touchStart) return;
-    const currentY = e.touches[0].clientY;
-    const diff = currentY - touchStart;
-    if (diff > 0) {
-      setTouchY(diff);
-      e.preventDefault();
-    }
   };
   const handleTouchEnd = () => {
     if (!touchStart) return;
@@ -191,7 +201,6 @@ function EditProfileModal({ onClose, initialData }) {
       <div
         ref={sheetRef}
         onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         style={{
           position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 1000,
