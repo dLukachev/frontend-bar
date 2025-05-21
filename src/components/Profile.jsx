@@ -127,7 +127,7 @@ function Profile({ currentTab }) {
   if (activeSection === 'orders') return <OrdersSection onClose={() => setActiveSection('main')} />;
 
   return (
-    <div style={{ background: '#FFFBF7', minHeight: '300vh', paddingBottom: 83}}>
+    <div style={{ background: '#FFFBF7', paddingBottom: 83}}>
       {/* Верхний фон */}
       <div style={{ background: '#EFE9E2', height: 140 }} />
       {/* Основной контейнер с закруглением, наезжающий на верхний фон */}
