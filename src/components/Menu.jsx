@@ -248,7 +248,17 @@ function ProductBottomSheet({ product, onClose, inCart, onAdd, onChangeCount }) 
             onClick={handleAddToCart}
           >{inCart ? 'Удалить' : 'В корзину'}</button>
         </div>
-        <button onClick={handleClose} style={{ margin: '0 auto', marginTop: 8, background: 'none', border: 0, color: '#8B6F53', fontSize: 18, cursor: 'pointer' }}>Закрыть</button>
+        <button onClick={handleClose} style={{ 
+          margin: '0 auto', 
+          marginTop: 8, 
+          background: 'none', 
+          border: 0, 
+          color: '#8B6F53', 
+          fontSize: 18, 
+          cursor: 'pointer',
+          WebkitTapHighlightColor: 'transparent',
+          tapHighlightColor: 'transparent'
+        }}>Закрыть</button>
       </div>
     </>
   );

@@ -477,9 +477,35 @@ function ProductBottomSheet({ product, onClose, inCart, onAdd, onChangeCount }) 
         <div style={{ fontSize: 15, color: '#410C00', marginBottom: 16 }}>{product.description}</div>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', border: '2px solid #410C00', borderRadius: 15, padding: '4px 16px', minWidth: 80, justifyContent: 'center', background: '#FFFBF7' }}>
-            <button onClick={() => handleQuantityChange(-1)} style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: '#410C00', color: '#fff', fontSize: 18, fontWeight: 700, cursor: 'pointer', marginRight: 8 }}>-</button>
+            <button onClick={() => handleQuantityChange(-1)} style={{ 
+              width: 28, 
+              height: 28, 
+              borderRadius: 8, 
+              border: 'none', 
+              background: '#410C00', 
+              color: '#fff', 
+              fontSize: 18, 
+              fontWeight: 700, 
+              cursor: 'pointer', 
+              marginRight: 8,
+              WebkitTapHighlightColor: 'transparent',
+              tapHighlightColor: 'transparent'
+            }}>-</button>
             <span style={{ fontSize: 18, fontWeight: 600, minWidth: 24, textAlign: 'center', color: '#410C00' }}>{inCart ? inCart.count : quantity}</span>
-            <button onClick={() => handleQuantityChange(1)} style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: '#410C00', color: '#fff', fontSize: 18, fontWeight: 700, cursor: 'pointer', marginLeft: 8 }}>+</button>
+            <button onClick={() => handleQuantityChange(1)} style={{ 
+              width: 28, 
+              height: 28, 
+              borderRadius: 8, 
+              border: 'none', 
+              background: '#410C00', 
+              color: '#fff', 
+              fontSize: 18, 
+              fontWeight: 700, 
+              cursor: 'pointer', 
+              marginLeft: 8,
+              WebkitTapHighlightColor: 'transparent',
+              tapHighlightColor: 'transparent'
+            }}>+</button>
           </div>
           <button
             style={{
@@ -493,11 +519,23 @@ function ProductBottomSheet({ product, onClose, inCart, onAdd, onChangeCount }) 
               fontSize: 18,
               cursor: 'pointer',
               transition: 'background 0.2s',
+              WebkitTapHighlightColor: 'transparent',
+              tapHighlightColor: 'transparent'
             }}
             onClick={handleAddToCart}
           >{inCart ? 'Удалить' : 'В корзину'}</button>
         </div>
-        <button onClick={handleClose} style={{ margin: '0 auto', marginTop: 8, background: 'none', border: 0, color: '#8B6F53', fontSize: 18, cursor: 'pointer' }}>Закрыть</button>
+        <button onClick={handleClose} style={{ 
+          margin: '0 auto', 
+          marginTop: 8, 
+          background: 'none', 
+          border: 0, 
+          color: '#8B6F53', 
+          fontSize: 18, 
+          cursor: 'pointer',
+          WebkitTapHighlightColor: 'transparent',
+          tapHighlightColor: 'transparent'
+        }}>Закрыть</button>
       </div>
     </>
   );
@@ -632,9 +670,35 @@ function Home() {
                   <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'flex-end', height: 22 }}>
                     {inCart ? (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', background: '#410C00', borderRadius: 5, justifyContent: 'center' }}>
-                        <button onClick={(e) => { e.stopPropagation(); changeCartItemCount(item.id, -1); }} style={{ width: 36, height: 22, borderRadius: 8, border: 0, background: 'none', color: '#FFFBF7', fontSize: 18, fontWeight: 500, cursor: 'pointer', lineHeight: 1 }}>-</button>
+                        <button onClick={(e) => { e.stopPropagation(); changeCartItemCount(item.id, -1); }} style={{ 
+                          width: 36, 
+                          height: 22, 
+                          borderRadius: 8, 
+                          border: 0, 
+                          background: 'none', 
+                          color: '#FFFBF7', 
+                          fontSize: 18, 
+                          fontWeight: 500, 
+                          cursor: 'pointer', 
+                          lineHeight: 1,
+                          WebkitTapHighlightColor: 'transparent',
+                          tapHighlightColor: 'transparent'
+                        }}>-</button>
                         <span style={{ fontSize: 15, fontWeight: 500, minWidth: 28, textAlign: 'center', color: '#FFFBF7' }}>{inCart.count}</span>
-                        <button onClick={(e) => { e.stopPropagation(); changeCartItemCount(item.id, 1); }} style={{ width: 36, height: 22, borderRadius: 8, border: 0, background: 'none', color: '#FFFBF7', fontSize: 18, fontWeight: 500, cursor: 'pointer', lineHeight: 1 }}>+</button>
+                        <button onClick={(e) => { e.stopPropagation(); changeCartItemCount(item.id, 1); }} style={{ 
+                          width: 36, 
+                          height: 22, 
+                          borderRadius: 8, 
+                          border: 0, 
+                          background: 'none', 
+                          color: '#FFFBF7', 
+                          fontSize: 18, 
+                          fontWeight: 500, 
+                          cursor: 'pointer', 
+                          lineHeight: 1,
+                          WebkitTapHighlightColor: 'transparent',
+                          tapHighlightColor: 'transparent'
+                        }}>+</button>
                       </div>
                     ) : (
                       <button
@@ -651,6 +715,8 @@ function Home() {
                           transition: 'background 0.2s',
                           padding: 0,
                           lineHeight: 1,
+                          WebkitTapHighlightColor: 'transparent',
+                          tapHighlightColor: 'transparent'
                         }}
                         onClick={(e) => { e.stopPropagation(); addToCart(item); }}
                       >В корзину</button>
