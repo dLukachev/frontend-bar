@@ -82,6 +82,8 @@ const btnStyle = (active) => ({
   cursor: 'pointer',
   padding: '8px 24px',
   margin: 0,
+  WebkitTapHighlightColor: 'transparent',
+  tapHighlightColor: 'transparent',
 });
 
 function NavigationBar({ currentTab, onTabChange }) {
@@ -115,6 +117,8 @@ function NavigationBar({ currentTab, onTabChange }) {
             alignItems: 'center',
             justifyContent: 'center',
             gap: 10,
+            WebkitTapHighlightColor: 'transparent',
+            tapHighlightColor: 'transparent',
           }}
         >
           <span>Оформить заказ  ·</span>
