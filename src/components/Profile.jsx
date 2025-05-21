@@ -1,4 +1,6 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
+import { get } from '../fetch/get';
 
 function getTelegramInitData() {
   try {
@@ -10,11 +12,190 @@ function getTelegramInitData() {
 }
 
 function QRSection({ onClose }) {
-  return <div style={sectionStyle}>
-    <ProfileCloseButton onClick={onClose} />
-    Мой QR (заглушка)
-  </div>;
+  const tgUser = useMemo(getTelegramInitData, []);
+  const userId = tgUser.id || null; // Реальный ID или null если недоступен
+  const [qrValue, setQrValue] = useState(`user_id:${userId || 'demo'}`);
+  const [displayCode, setDisplayCode] = useState('L42ZA6E'); // Код для показа пользователю
+  const [isVisible, setIsVisible] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchY, setTouchY] = useState(0);
+  const sheetRef = useRef(null);
+  
+  // Показываем модалку после рендера
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      setIsVisible(true);
+    });
+  }, []);
+  
+  const refreshQRCode = () => {
+    // Обновляем данные QR-кода с новой временной меткой для имитации обновления
+    const newQrValue = `user_id:${userId || 'demo'}:${Date.now()}`;
+    setQrValue(newQrValue);
+  };
+  
+  const handleClose = () => {
+    setIsClosing(true);
+    setIsVisible(false);
+    setTouchY(0);
+    setTimeout(() => {
+      onClose();
+    }, 300);
+  };
+
+  const handleTouchStart = (e) => {
+    const touchY = e.touches[0].clientY;
+    const sheetTop = sheetRef.current.getBoundingClientRect().top;
+    if (touchY - sheetTop > 50) return; // Игнорируем касания ниже 50px от верха
+    
+    setTouchStart(e.touches[0].clientY);
+    setTouchY(0);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!touchStart) return;
+    
+    const currentY = e.touches[0].clientY;
+    const diff = currentY - touchStart;
+    
+    // Разрешаем свайп только вниз
+    if (diff > 0) {
+      setTouchY(diff);
+      e.preventDefault();
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart) return;
+    
+    // Если свайпнули больше 100px вниз, закрываем
+    if (touchY > 100) {
+      handleClose();
+    } else {
+      // Иначе возвращаем на место
+      setTouchY(0);
+    }
+    setTouchStart(null);
+  };
+  
+  return (
+    <>
+      <div onClick={handleClose} style={{
+        position: 'fixed', left: 0, top: 0, right: 0, bottom: 0, zIndex: 999,
+        background: 'rgba(0,0,0,0.6)',
+        backdropFilter: 'blur(3px)',
+        opacity: isVisible ? 1 : 0,
+        transition: 'opacity 0.3s ease-in-out',
+      }} />
+      <div 
+        ref={sheetRef}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{
+          position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 1000,
+          background: '#F3ECE4',
+          borderTopLeftRadius: 24, borderTopRightRadius: 24,
+          boxShadow: '0 -4px 24px #0002',
+          minHeight: 520, maxHeight: '90vh',
+          overflowY: 'auto',
+          transform: isVisible ? `translateY(${touchY}px)` : 'translateY(100%)',
+          transition: touchStart ? 'none' : 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          padding: '24px 20px',
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          willChange: 'transform',
+          touchAction: 'none',
+        }}
+      >
+        {/* Индикатор свайпа */}
+        <div 
+          style={{
+            width: 40,
+            height: 4,
+            background: '#E5DED6',
+            borderRadius: 2,
+            margin: '0 auto 24px',
+            cursor: 'grab',
+          }}
+        />
+        
+        <h1 style={{
+          fontSize: '40px',
+          fontWeight: 'bold',
+          color: '#410C00',
+          fontFamily: 'Tiffany, serif',
+          marginBottom: '8px',
+          textAlign: 'center'
+        }}>
+          Мой QR-код
+        </h1>
+        
+        <p style={{
+          fontSize: '16px',
+          color: '#8B6F53',
+          marginBottom: '40px',
+          textAlign: 'center'
+        }}>
+          Покажи на кассе
+        </p>
+        
+        <div style={{
+          background: 'white',
+          padding: '20px',
+          borderRadius: '20px',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginBottom: '40px',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+          position: 'relative'
+        }}>
+          <QRCodeSVG 
+            value={qrValue} 
+            size={250} 
+            level="H" 
+            style={{
+              opacity: userId ? 1 : 0.5
+            }}
+          />
+        </div>
+        
+        <h2 style={{
+          fontSize: '32px',
+          fontWeight: 'bold',
+          color: '#410C00',
+          marginBottom: '8px',
+          textAlign: 'center',
+          fontFamily: 'SF Pro Text, sans-serif',
+        }}>
+          {displayCode}
+        </h2>
+        
+        <p style={{
+          fontSize: '16px',
+          color: '#8B6F53',
+          textAlign: 'center'
+        }}>
+          Или продиктуй
+        </p>
+        
+        <button onClick={handleClose} style={{ 
+          margin: '0 auto', 
+          marginTop: '24px', 
+          background: 'none', 
+          border: 0, 
+          color: '#8B6F53', 
+          fontSize: 18, 
+          cursor: 'pointer',
+          WebkitTapHighlightColor: 'transparent',
+          tapHighlightColor: 'transparent'
+        }}>Закрыть</button>
+      </div>
+    </>
+  );
 }
+
 function AchievementsSection({ onClose }) {
   return <div style={sectionStyle}>
     <ProfileCloseButton onClick={onClose} />
@@ -109,6 +290,7 @@ function ProfileButton({ icon, text, onClick, rightElement }) {
 
 function Profile({ currentTab }) {
   const [activeSection, setActiveSection] = useState('main');
+  const [showQRModal, setShowQRModal] = useState(false);
   const tgUser = useMemo(getTelegramInitData, []);
   const name = tgUser.first_name || tgUser.last_name ? `${tgUser.first_name || ''} ${tgUser.last_name || ''}`.trim() : 'Не определено';
   const username = tgUser.username ? `@${tgUser.username}` : 'Не определено';
@@ -121,7 +303,6 @@ function Profile({ currentTab }) {
     }
   }, [currentTab]);
 
-  if (activeSection === 'qr') return <QRSection onClose={() => setActiveSection('main')} />;
   if (activeSection === 'achievements') return <AchievementsSection onClose={() => setActiveSection('main')} />;
   if (activeSection === 'about') return <AboutSection onClose={() => setActiveSection('main')} />;
   if (activeSection === 'orders') return <OrdersSection onClose={() => setActiveSection('main')} />;
@@ -185,7 +366,7 @@ function Profile({ currentTab }) {
           <ProfileButton 
             icon={<img src="/icons/qr.svg" alt="QR" style={{ width: 24, height: 24 }} />} 
             text={<span style={{ fontWeight: 300, fontFamily: 'SF Pro Text, sans-serif', letterSpacing: 0, fontSize: 16 }}>Мой QR</span>} 
-            onClick={() => setActiveSection('qr')} 
+            onClick={() => setShowQRModal(true)} 
           />
           <ProfileButton 
             icon={<img src="/icons/kybok.svg" alt="Достижения" style={{ width: 24, height: 24 }} />} 
@@ -214,7 +395,238 @@ function Profile({ currentTab }) {
           />
         </div>
       </div>
+      
+      {/* QR Modal */}
+      {showQRModal && <QRModal onClose={() => setShowQRModal(false)} />}
     </div>
+  );
+}
+
+// QR Modal component for overlay
+function QRModal({ onClose }) {
+  const tgUser = useMemo(getTelegramInitData, []);
+  const userId = tgUser.id || null; // Реальный ID или null если недоступен
+  const [qrValue] = useState(`user_id:${userId || 'demo'}`);
+  const [userUniqueCode, setUserUniqueCode] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchY, setTouchY] = useState(0);
+  const sheetRef = useRef(null);
+  
+  // Показываем модалку после рендера
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      setIsVisible(true);
+    });
+  }, []);
+  
+  // Загрузка данных пользователя из API
+  useEffect(() => {
+    const initData = window.Telegram?.WebApp?.initData || '';
+    
+    setIsLoading(true);
+    setError(false);
+    
+    get('/users/me', initData)
+      .then(response => {
+        if (response && response.user && response.user.unique_code) {
+          setUserUniqueCode(response.user.unique_code);
+        } else {
+          setError(true);
+        }
+      })
+      .catch(() => {
+        setError(true);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, []);
+  
+  const handleClose = () => {
+    setIsClosing(true);
+    setIsVisible(false);
+    setTouchY(0);
+    setTimeout(() => {
+      onClose();
+    }, 300);
+  };
+
+  const handleTouchStart = (e) => {
+    const touchY = e.touches[0].clientY;
+    const sheetTop = sheetRef.current.getBoundingClientRect().top;
+    if (touchY - sheetTop > 50) return; // Игнорируем касания ниже 50px от верха
+    
+    setTouchStart(e.touches[0].clientY);
+    setTouchY(0);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!touchStart) return;
+    
+    const currentY = e.touches[0].clientY;
+    const diff = currentY - touchStart;
+    
+    // Разрешаем свайп только вниз
+    if (diff > 0) {
+      setTouchY(diff);
+      e.preventDefault();
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart) return;
+    
+    // Если свайпнули больше 100px вниз, закрываем
+    if (touchY > 100) {
+      handleClose();
+    } else {
+      // Иначе возвращаем на место
+      setTouchY(0);
+    }
+    setTouchStart(null);
+  };
+  
+  return (
+    <>
+      <div onClick={handleClose} style={{
+        position: 'fixed', left: 0, top: 0, right: 0, bottom: 0, zIndex: 999,
+        background: 'rgba(0,0,0,0.6)',
+        backdropFilter: 'blur(3px)',
+        opacity: isVisible ? 1 : 0,
+        transition: 'opacity 0.3s ease-in-out',
+      }} />
+      <div 
+        ref={sheetRef}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{
+          position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 1000,
+          background: '#F3ECE4',
+          borderTopLeftRadius: 24, borderTopRightRadius: 24,
+          boxShadow: '0 -4px 24px #0002',
+          minHeight: 520, maxHeight: '90vh',
+          overflowY: 'auto',
+          transform: isVisible ? `translateY(${touchY}px)` : 'translateY(100%)',
+          transition: touchStart ? 'none' : 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          padding: '24px 20px',
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          willChange: 'transform',
+          touchAction: 'none',
+        }}
+      >
+        {/* Индикатор свайпа */}
+        <div 
+          style={{
+            width: 40,
+            height: 4,
+            background: '#E5DED6',
+            borderRadius: 2,
+            margin: '0 auto 24px',
+            cursor: 'grab',
+          }}
+        />
+        
+        <h1 style={{
+          fontSize: '40px',
+          fontWeight: 'bold',
+          color: '#410C00',
+          fontFamily: 'Tiffany, serif',
+          marginBottom: '8px',
+          textAlign: 'center'
+        }}>
+          Мой QR-код
+        </h1>
+        
+        <p style={{
+          fontSize: '16px',
+          color: '#8B6F53',
+          marginBottom: '40px',
+          textAlign: 'center'
+        }}>
+          Покажи на кассе
+        </p>
+        
+        <div style={{
+          background: 'white',
+          padding: '20px',
+          borderRadius: '20px',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginBottom: '40px',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+          position: 'relative'
+        }}>
+          <QRCodeSVG 
+            value={qrValue} 
+            size={250} 
+            level="H" 
+            style={{
+              opacity: userId ? 1 : 0.5
+            }}
+          />
+          
+          {!userId && (
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              background: 'rgba(255, 255, 255, 0.7)',
+              borderRadius: '20px',
+              fontSize: '16px',
+              color: '#8B6F53',
+              textAlign: 'center',
+              padding: '0 30px'
+            }}>
+              QR-код недоступен
+            </div>
+          )}
+        </div>
+        
+        <h2 style={{
+          fontSize: 32,
+          fontWeight: 'bold',
+          color: '#410C00',
+          marginBottom: '8px',
+          textAlign: 'center',
+          fontFamily: 'SF Pro Text, sans-serif',
+        }}>
+          {isLoading ? 
+            "Загрузка..." : 
+            (userUniqueCode || "Код недоступен")}
+        </h2>
+        
+        <p style={{
+          fontSize: '16px',
+          color: '#8B6F53',
+          textAlign: 'center'
+        }}>
+          Или продиктуй
+        </p>
+        
+        <button onClick={handleClose} style={{ 
+          margin: '0 auto', 
+          marginTop: '24px', 
+          background: 'none', 
+          border: 0, 
+          color: '#8B6F53', 
+          fontSize: 18, 
+          cursor: 'pointer',
+          WebkitTapHighlightColor: 'transparent',
+          tapHighlightColor: 'transparent'
+        }}>Закрыть</button>
+      </div>
+    </>
   );
 }
 
