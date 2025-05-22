@@ -32,6 +32,12 @@ function App() {
     if (window.Telegram?.WebApp?.expand) {
       window.Telegram.WebApp.expand();
     }
+    if (window.Telegram?.WebApp?.requestFullscreen) {
+      window.Telegram.WebApp.requestFullscreen();
+    }
+    if (window.Telegram?.WebApp?.setHeaderColor) {
+      window.Telegram.WebApp.setHeaderColor('#ffffff');
+    }
   }, []);
 
   let content;
