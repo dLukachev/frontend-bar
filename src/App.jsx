@@ -7,7 +7,6 @@ import Profile from './components/Profile';
 import Cart from './components/Cart';
 import Order from './components/Order';
 import { AppProvider } from './context/AppContext';
-import CustomHeader from './components/CustomHeader';
 
 const TABS = {
   HOME: 'home',
@@ -66,7 +65,7 @@ function App() {
 
   return (
     <AppProvider>
-      <CustomHeader onClose={() => window.Telegram?.WebApp?.close()} />
+      {/* <CustomHeader onClose={() => window.Telegram?.WebApp?.close()} /> */}
       <div style={{ paddingBottom: 64 }}>
         {content}
         <NavigationBar currentTab={tab} onTabChange={setTab} />
