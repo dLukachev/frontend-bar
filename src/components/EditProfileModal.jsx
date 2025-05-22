@@ -207,7 +207,7 @@ function EditProfileModal({ onClose, initialData }) {
           background: '#FFFBF7',
           borderTopLeftRadius: 24, borderTopRightRadius: 24,
           boxShadow: '0 -4px 24px #0002',
-          minHeight: 520, maxHeight: '90vh',
+          minHeight: 630, maxHeight: '90vh',
           overflowY: 'auto',
           transform: isVisible ? `translateY(${touchY}px)` : 'translateY(100%)',
           transition: touchStart ? 'none' : 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -229,7 +229,7 @@ function EditProfileModal({ onClose, initialData }) {
           }}>Обо мне</h1>
         </div>
         {!initialData ? <ProfileSkeleton /> :
-        <form onSubmit={handleSubmit} style={{ width: 340, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <form id="edit-profile-form" onSubmit={handleSubmit} style={{ width: 340, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           {/* Имя */}
           <div style={fieldWrapStyle}>
             <label style={labelStyle}>Имя</label>
@@ -255,12 +255,14 @@ function EditProfileModal({ onClose, initialData }) {
             <label style={labelStyle}>Любимое блюдо</label>
             <input style={inputStyle} value={form.favorite_dish} onChange={e => handleChange('favorite_dish', e.target.value)} maxLength={64} autoComplete="off" />
           </div>
-          <button type="submit" style={buttonStyle} disabled={isLoading}>{isLoading ? 'Сохранение...' : 'Сохранить'}</button>
           {error && <div style={{ color: '#B00020', marginTop: 12 }}>{error}</div>}
           {success && <div style={{ color: '#388E3C', marginTop: 12 }}>Сохранено!</div>}
         </form>
         }
-        <button onClick={handleClose} style={{ margin: '0 auto', marginTop: 24, background: 'none', border: 0, color: '#8B6F53', fontSize: 18, cursor: 'pointer', WebkitTapHighlightColor: 'transparent', tapHighlightColor: 'transparent' }}>Закрыть</button>
+        <div style={{ width: 340, display: 'flex', flexDirection: 'column', gap: 18, marginTop: 'auto' }}>
+          <button type="submit" style={buttonStyle} disabled={isLoading} form="edit-profile-form">{isLoading ? 'Сохранение...' : 'Сохранить'}</button>
+          <button onClick={handleClose} type="button" style={{ background: 'none', border: 0, color: '#8B6F53', fontSize: 18, cursor: 'pointer', WebkitTapHighlightColor: 'transparent', tapHighlightColor: 'transparent' }}>Закрыть</button>
+        </div>
       </div>
     </>
   );

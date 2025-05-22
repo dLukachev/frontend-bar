@@ -1071,7 +1071,7 @@ function ProfileButton({ icon, text, onClick, rightElement }) {
         width: '100%',
         background: 'none',
         border: 'none',
-        padding: '11px 0 20px 0',
+        padding: '11px 0 21px 0',
         borderBottom: '1px solid #F3ECE4',
         fontSize: 16,
         color: '#3B1707',
@@ -1132,7 +1132,7 @@ function Profile({ currentTab }) {
   if (activeSection === 'orders') return <OrdersSection onClose={() => setActiveSection('main')} orders={orders} ordersLoading={ordersLoading} />;
 
   return (
-    <div style={{ background: '#FFFBF7', paddingBottom: 83, height: '90vh', overflow: 'hidden'}}>
+    <div style={{ background: '#FFFBF7', paddingBottom: 83, height: '93vh', overflow: 'hidden'}}>
       {/* Верхний фон */}
       <div style={{ background: '#EFE9E2', height: 227 }} />
       {/* Основной контейнер с закруглением, наезжающий на верхний фон */}
@@ -1337,7 +1337,7 @@ function QRModal({ onClose }) {
           background: '#F3ECE4',
           borderTopLeftRadius: 24, borderTopRightRadius: 24,
           boxShadow: '0 -4px 24px #0002',
-          minHeight: 520, maxHeight: '90vh',
+          minHeight: 630, maxHeight: '90vh',
           overflowY: 'auto',
           transform: isVisible ? `translateY(${touchY}px)` : 'translateY(100%)',
           transition: touchStart ? 'none' : 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
