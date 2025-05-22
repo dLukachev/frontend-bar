@@ -829,6 +829,21 @@ function OrdersSection({ onClose, orders, ordersLoading }) {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [error, setError] = useState(false);
 
+  // Форматирование даты и времени
+  const formatOrderDate = (dateString) => {
+    const date = new Date(dateString);
+    const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+    return `${date.getDate()} ${months[date.getMonth()]}`;
+  };
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+    const day = days[date.getDay()];
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}, ${day}`;
+  };
+
   const filteredOrders = orders.filter(order => {
     if (activeTab === 'active') {
       return ['pending', 'confirmed'].includes(order.status);
@@ -954,8 +969,16 @@ function OrdersSection({ onClose, orders, ordersLoading }) {
                     color: '#410C00',
                     fontFamily: 'SF Pro Text, sans-serif'
                   }}>
-                    {order.created_at}
+                    {formatOrderDate(order.created_at)}
                   </h3>
+                  <p style={{ 
+                    margin: '4px 0 0 0',
+                    fontSize: 10,
+                    color: '#9B8169',
+                    fontFamily: 'SF Pro Text, sans-serif'
+                  }}>
+                    {formatDate(order.created_at)}
+                  </p>
                 </div>
                 <div style={{ 
                   display: 'flex',
