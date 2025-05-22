@@ -1071,7 +1071,7 @@ function ProfileButton({ icon, text, onClick, rightElement }) {
         width: '100%',
         background: 'none',
         border: 'none',
-        padding: '18px 0 25px 0',
+        padding: '11px 0 20px 0',
         borderBottom: '1px solid #F3ECE4',
         fontSize: 16,
         color: '#3B1707',
@@ -1132,9 +1132,9 @@ function Profile({ currentTab }) {
   if (activeSection === 'orders') return <OrdersSection onClose={() => setActiveSection('main')} orders={orders} ordersLoading={ordersLoading} />;
 
   return (
-    <div style={{ background: '#FFFBF7', paddingBottom: 83}}>
+    <div style={{ background: '#FFFBF7', paddingBottom: 83, height: '90vh', overflow: 'hidden'}}>
       {/* Верхний фон */}
-      <div style={{ background: '#EFE9E2', height: 140 }} />
+      <div style={{ background: '#EFE9E2', height: 227 }} />
       {/* Основной контейнер с закруглением, наезжающий на верхний фон */}
       <div
         style={{
