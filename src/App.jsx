@@ -25,17 +25,19 @@ function App() {
   }, [tab]);
 
   useEffect(() => {
-    if (window.Telegram?.WebApp?.disableHeader) {
-      window.Telegram.WebApp.disableHeader();
-    }
-    if (window.Telegram?.WebApp?.expand) {
-      window.Telegram.WebApp.expand();
-    }
-    if (window.Telegram?.WebApp?.requestFullscreen) {
-      window.Telegram.WebApp.requestFullscreen();
-    }
-    if (window.Telegram?.WebApp?.setHeaderColor) {
-      window.Telegram.WebApp.setHeaderColor('#ffffff');
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    if (isMobile && window.Telegram?.WebApp) {
+      try {
+        window.Telegram.WebApp.disableHeader?.();
+        window.Telegram.WebApp.expand?.();
+        window.Telegram.WebApp.requestFullscreen?.();
+        window.Telegram.WebApp.setHeaderColor?.('#ffffff');
+      } catch (e) {
+        if (import.meta.env.DEV) {
+          console.warn('Telegram WebApp API not available:', e);
+        }
+      }
     }
   }, []);
 
@@ -65,7 +67,6 @@ function App() {
 
   return (
     <AppProvider>
-      {/* <CustomHeader onClose={() => window.Telegram?.WebApp?.close()} /> */}
       <div style={{ paddingBottom: 64 }}>
         {content}
         <NavigationBar currentTab={tab} onTabChange={setTab} />

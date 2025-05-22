@@ -589,6 +589,7 @@ function Home() {
 
   return (
     <div style={{ background: '#F3ECE4', minHeight: '100vh', padding: '0 0 80px 0', overflowX: 'hidden' }}>
+       <div style={{ background: '#F3ECE4', height: 40}}></div>
       <TiffanyFontTag />
       <ShimmerStyleTag />
       {/* Акции и новости */}
