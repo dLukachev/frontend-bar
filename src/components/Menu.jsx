@@ -368,6 +368,7 @@ function Menu({ setTab }) {
         background: '#F3ECE4',
         borderBottom: '1px solid #E5DED6'
       }}>
+        <div style={{ background: '#F3ECE4', height: 87}}></div>
         <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0' }}>
           <div style={{ display: 'flex', background: '#FFFBF7', borderRadius: 18, boxShadow: '0 2px 8px #0001', padding: 8, width: '338px', height: 48, justifyContent: 'center', gap: 19 }}>
             {['menu', 'bar'].map(tabKey => (
@@ -397,7 +398,6 @@ function Menu({ setTab }) {
             ))}
           </div>
         </div>
-
         {/* Категории */}
         <div style={{ 
           overflowX: 'auto', 
@@ -453,7 +453,7 @@ function Menu({ setTab }) {
           )}
         </div>
       </div>
-
+      <div style={{ background: '#F3ECE4', height: 87}}></div>
       {/* Все категории и блюда */}
       <div style={{ paddingTop: 140 }}>
         {filteredCategories.map(cat => (

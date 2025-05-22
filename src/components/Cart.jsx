@@ -36,6 +36,7 @@ function Cart({ setTab }) {
 
   return (
     <div style={{ background: '#F3ECE4', minHeight: '100vh', padding: '0 0 80px 0', position: 'relative' }}>
+      <div style={{ background: '#F3ECE4', height: 87}}></div>
       <TiffanyFontTag />
       {/* Крестик закрытия */}
       <button
