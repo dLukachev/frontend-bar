@@ -25,6 +25,15 @@ function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [tab]);
 
+  useEffect(() => {
+    if (window.Telegram?.WebApp?.disableHeader) {
+      window.Telegram.WebApp.disableHeader();
+    }
+    if (window.Telegram?.WebApp?.expand) {
+      window.Telegram.WebApp.expand();
+    }
+  }, []);
+
   let content;
   switch (tab) {
     case TABS.HOME:
