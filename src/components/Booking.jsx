@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import dayjs from "dayjs";
 import { get } from '../fetch/get';
+import { useUserData } from './Profile';
 
 // In-memory cache для запросов (5 минут)
 const cache = {};
@@ -593,16 +594,32 @@ function BookingDetailsModal({ onClose, tableInfo, tableSlots }) {
   const [touchY, setTouchY] = useState(0);
   const sheetRef = React.useRef(null);
 
+  const { userData, isLoading: isUserDataLoading, error: userDataError } = useUserData();
+
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [name, setName] = useState('');
   const [guests, setGuests] = useState('');
   const [phone, setPhone] = useState('');
   const [wishes, setWishes] = useState('');
+  const [formErrors, setFormErrors] = useState({});
 
 
   React.useEffect(() => {
     requestAnimationFrame(() => setIsVisible(true));
   }, []);
+
+  // Autocomplete name and phone from userData when it loads
+  useEffect(() => {
+    if (userData) {
+      if (userData.first_name || userData.last_name) {
+        setName(`${userData.first_name || ''} ${userData.last_name || ''}`.trim());
+      }
+      if (userData.phone_number) {
+        setPhone(userData.phone_number);
+      }
+    }
+  }, [userData]);
+
 
   const handleClose = () => {
     setIsVisible(false);
@@ -633,16 +650,44 @@ function BookingDetailsModal({ onClose, tableInfo, tableSlots }) {
   };
 
   const handleBookTime = () => {
-      // TODO: Implement booking logic here
+      const errors = {};
+      if (!name.trim()) {
+          errors.name = 'Имя обязательно';
+      }
+      if (!phone.trim()) {
+          errors.phone = 'Телефон обязателен';
+      }
+      // Check if guests is a positive number
+      const guestsNum = parseInt(guests, 10);
+      if (!guests || isNaN(guestsNum) || guestsNum <= 0) {
+          errors.guests = 'Количество гостей обязательно и должно быть больше 0';
+      }
+      if (!selectedSlot) {
+          errors.selectedSlot = 'Выберите время';
+      }
+
+      if (Object.keys(errors).length > 0) {
+          setFormErrors(errors);
+          // Optionally highlight fields or show a general error message
+          console.error('Form validation errors:', errors);
+          return;
+      }
+
+      setFormErrors({}); // Clear previous errors
+
+      // TODO: Implement actual booking API call here
       console.log('Booking:', {
           tableId: tableInfo?.id,
           selectedSlot,
           name,
-          guests,
+          guests: guestsNum,
           phone,
           wishes
       });
-      handleClose(); // Close modal after booking attempt
+
+      // Assuming booking API call is successful, close modal
+      // In a real app, you'd await the API call and handle success/failure
+      // handleClose(); // Keep modal open for now to show potential errors
   };
 
 
@@ -796,6 +841,11 @@ function BookingDetailsModal({ onClose, tableInfo, tableSlots }) {
                 style={{ width: '100%', height: 77 }} // Use 100% width
             />
         </div>
+         {Object.keys(formErrors).length > 0 && (
+             <div style={{ color: '#B00020', fontSize: 12, textAlign: 'center', marginTop: 12 }}>
+                 Пожалуйста, заполните все обязательные поля. {formErrors.name} {formErrors.phone} {formErrors.guests}
+             </div>
+         )}
 
         {/* Book Button */}
         <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'center' }}>
