@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import dayjs from "dayjs";
 import { get } from '../fetch/get';
+import { post } from '../fetch/post';
 import { useUserData } from './Profile';
 
 // In-memory cache для запросов (5 минут)
@@ -206,24 +207,24 @@ function Booking() {
   }
 
   // Функция для получения доступности столов
-  const fetchTablesAvailability = async (slot) => {
+  const fetchTablesAvailability = async (slot, bypassCache = false) => {
     try {
       const { start, end } = getSlotTimes(slot);
       const key = `/reservations/tables/slot-availability?restaurant_id=1&date=${selectedDate}&slot_start=${start}&slot_end=${end}`;
-      const data = await cachedGet(
-        key,
-        () => get(
-          '/reservations/tables/slot-availability',
-          getInitData(),
-          {
-            restaurant_id: 1,
-            date: selectedDate,
-            slot_start: start,
-            slot_end: end
-          },
-          { 'initData': getInitData() }
-        )
+      const fetcher = () => get(
+        '/reservations/tables/slot-availability',
+        getInitData(),
+        {
+          restaurant_id: 1,
+          date: selectedDate,
+          slot_start: start,
+          slot_end: end
+        },
+        { 'initData': getInitData() }
       );
+
+      const data = bypassCache ? await fetcher() : await cachedGet(key, fetcher);
+
       setTablesAvailability(data);
     } catch (error) {
       console.error('Error fetching tables availability:', error);
@@ -253,6 +254,14 @@ function Booking() {
   const handleCloseBookingDetailsModal = () => {
     setShowBookingDetailsModal(false);
     setSelectedTableData(null);
+    // Clear cached table availability data for all time slots for the current date
+    timeSlots.forEach(slot => {
+      const { start, end } = getSlotTimes(slot);
+      const key = `/reservations/tables/slot-availability?restaurant_id=1&date=${selectedDate}&slot_start=${start}&slot_end=${end}`;
+      delete cache[key];
+    });
+    // Fetch fresh data for the currently active slot
+    fetchTablesAvailability(timeSlots[activeSlot]);
   };
 
   return (
@@ -649,7 +658,7 @@ function BookingDetailsModal({ onClose, tableInfo, tableSlots }) {
     setTouchStart(null);
   };
 
-  const handleBookTime = () => {
+  const handleBookTime = async () => { // Made async to await post request
       const errors = {};
       if (!name.trim()) {
           errors.name = 'Имя обязательно';
@@ -675,19 +684,49 @@ function BookingDetailsModal({ onClose, tableInfo, tableSlots }) {
 
       setFormErrors({}); // Clear previous errors
 
-      // TODO: Implement actual booking API call here
-      console.log('Booking:', {
-          tableId: tableInfo?.id,
-          selectedSlot,
-          name,
-          guests: guestsNum,
-          phone,
-          wishes
-      });
+      // Format reservation_time
+      // Using hardcoded date 2025-05-24 for now as per instructions
+      // In a real app, this would come from the date selector
+      const reservationDate = '2025-05-24';
+      const reservationTimeISO = `${reservationDate}T${selectedSlot.start}:00Z`; // Assuming slot.start is like "HH:mm"
 
-      // Assuming booking API call is successful, close modal
-      // In a real app, you'd await the API call and handle success/failure
-      // handleClose(); // Keep modal open for now to show potential errors
+      const bookingPayload = {
+          restaurant_id: 1, // Assuming restaurant_id is 1
+          table_id: tableInfo?.id,
+          reservation_time: reservationTimeISO,
+          duration: 120, // as per instructions
+          guest_count: guestsNum,
+          contact_name: name.trim(), // Add contact_name from name state
+          contact_phone: phone.trim(), // Add contact_phone from phone state
+          special_requests: wishes.trim() || null, // Use null if wishes is empty
+          is_recurring: false, // Assuming not recurring for now
+          recurring_pattern: null // Assuming no recurring pattern
+      };
+
+      try {
+          // TODO: Implement actual booking API call here
+          console.log('Attempting to book with payload:', bookingPayload);
+          const response = await post(
+              '/reservations',
+              getInitData(),
+              bookingPayload
+              // Add headers if necessary, e.g., Authorization
+          );
+          console.log('Booking successful:', response);
+          // Assuming booking API call is successful, close modal
+          handleClose();
+          // Clear cached table availability data for all time slots
+          timeSlots.forEach(slot => {
+            const { start, end } = getSlotTimes(slot);
+            const key = `/reservations/tables/slot-availability?restaurant_id=1&date=${selectedDate}&slot_start=${start}&slot_end=${end}`;
+            delete cache[key];
+          });
+          // We don't explicitly refetch here, the next time the user selects a slot
+          // the cache will be empty and it will fetch fresh data.
+      } catch (error) {
+          console.error('Booking failed:', error);
+          // TODO: Handle booking error (show message to user)
+      }
   };
 
 
