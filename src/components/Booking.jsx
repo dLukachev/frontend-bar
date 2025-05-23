@@ -195,7 +195,8 @@ function Booking() {
   const [activeSlot, setActiveSlot] = useState(0); // по умолчанию 11:00–13:00
   // Сегодняшняя дата в формате YYYY-MM-DD
   const today = dayjs().format('YYYY-MM-DD');
-  const selectedDate = today;
+  const [selectedDate, setSelectedDate] = useState(today); // State for selected date
+  const [showCalendarModal, setShowCalendarModal] = useState(false); // State to control calendar modal visibility
 
   const [showBookingDetailsModal, setShowBookingDetailsModal] = useState(false);
   const [selectedTableData, setSelectedTableData] = useState(null);
@@ -234,7 +235,7 @@ function Booking() {
   // При изменении активного слота запрашиваем доступность столов
   useEffect(() => {
     fetchTablesAvailability(timeSlots[activeSlot]);
-  }, [activeSlot, selectedDate]);
+  }, [activeSlot, selectedDate]); // Added selectedDate dependency
 
   // Просто открытие модалки по клику
   const handleTableClick = (tableId) => {
@@ -272,14 +273,29 @@ function Booking() {
         <span style={{ fontFamily: 'Tiffany, serif', fontSize: 31, color: '#410C00', fontWeight: 400 }}>
           Бронирование
         </span>
-        <button style={{
-          width: 101, height: 39, borderRadius: 12, border: 'none', background: '#F3ECE4',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: 8, cursor: 'pointer',
-          fontFamily: 'Tiffany, serif', fontSize: 31, color: '#410C00', fontWeight: 400
-        }}>
-          20.05
-          <span style={{ marginLeft: 8, fontSize: 18, color: '#410C00' }}>▼</span>
-        </button>
+        <div style={{ position: 'relative' }}>
+          <button
+            style={{
+              width: 101, height: 39, borderRadius: 12, border: 'none', background: '#F3ECE4',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: 8, cursor: 'pointer',
+              fontFamily: 'Tiffany, serif', fontSize: 31, color: '#410C00', fontWeight: 400
+            }}
+            onClick={() => setShowCalendarModal(true)}
+          >
+            {dayjs(selectedDate).format('DD.MM')}
+            <span style={{ marginLeft: 8, fontSize: 18, color: '#410C00' }}>▼</span>
+          </button>
+          {showCalendarModal && (
+            <CalendarModal
+              selectedDate={selectedDate}
+              onSelectDate={(date) => {
+                setSelectedDate(date);
+                setShowCalendarModal(false);
+              }}
+              onClose={() => setShowCalendarModal(false)}
+            />
+          )}
+        </div>
       </div>
       {/* Временные интервалы */}
       <div style={{
@@ -476,13 +492,6 @@ function Booking() {
           <rect x="113.396" y="405.866" width="11.2419" height="68.7638" rx="3" transform="rotate(-45 113.396 405.866)" fill="#F3ECE4"/>
           <rect x="159.821" y="453.969" width="11.2419" height="120.85" rx="3" transform="rotate(-90 159.821 453.969)" fill="#F3ECE4"/>
           <rect x="269.43" y="315.32" width="11.2419" height="138.65" rx="3" fill="#F3ECE4"/>
-          <g style={{ cursor: 'pointer' }} onClick={() => handleTableClick(12)}>
-          <rect x="164.791" y="436.428" width="38.4097" height="22.4838" rx="3" transform="rotate(-135 164.791 436.428)" fill="#F3ECE4"/>
-          <rect x="127.032" y="419.867" width="11.2419" height="38.4098" rx="3" transform="rotate(-45 127.032 419.867)" fill="#F3ECE4"/>
-          <rect x="155.152" y="389.693" width="11.2419" height="16.8628" rx="3" transform="rotate(-45 155.152 389.693)" fill="#F3ECE4"/>
-          <rect x="170.708" y="405.249" width="11.2419" height="16.8628" rx="3" transform="rotate(-45 170.708 405.249)" fill="#F3ECE4"/>
-          <path d="M158.579 410.501L153.95 415.13L153.25 414.429L157.177 410.501L157.15 410.474L155.32 410.09L155.989 409.421L157.898 409.821L158.579 410.501ZM155.202 416.382L155.708 415.876L158.897 415.819C159.241 415.81 159.533 415.793 159.774 415.769C160.018 415.745 160.228 415.7 160.402 415.634C160.577 415.567 160.732 415.466 160.868 415.331C161.022 415.177 161.118 415.008 161.157 414.825C161.198 414.639 161.186 414.454 161.121 414.269C161.058 414.082 160.948 413.91 160.791 413.753C160.625 413.588 160.447 413.477 160.255 413.421C160.064 413.365 159.874 413.366 159.684 413.423C159.494 413.481 159.316 413.592 159.15 413.758L158.484 413.091C158.765 412.81 159.077 412.628 159.417 412.547C159.758 412.465 160.099 412.48 160.441 412.59C160.784 412.698 161.1 412.896 161.388 413.184C161.678 413.475 161.877 413.789 161.982 414.126C162.091 414.464 162.108 414.795 162.034 415.118C161.962 415.441 161.801 415.726 161.553 415.975C161.381 416.147 161.181 416.282 160.952 416.382C160.724 416.483 160.43 416.555 160.07 416.599C159.712 416.641 159.248 416.664 158.68 416.669L156.798 416.712L156.764 416.746L158.848 418.829L158.249 419.428L155.202 416.382Z" fill="#410C00"/>
-          </g>
         </svg>
         {showTableModal && <TableModal onClose={() => setShowTableModal(false)} tableId={selectedTableId} selectedDate={selectedDate} onSelectTime={handleSelectTime} />}
         {showBookingDetailsModal && selectedTableData && (
@@ -910,6 +919,201 @@ function BookingDetailsModal({ onClose, tableInfo, tableSlots }) {
 
       </div>
     </>
+  );
+}
+
+// New Calendar Modal Component
+function CalendarModal({ selectedDate, onSelectDate, onClose }) {
+  const [currentMonth, setCurrentMonth] = useState(dayjs(selectedDate));
+  const calendarRef = React.useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (calendarRef.current && !calendarRef.current.contains(event.target)) {
+        onClose();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [onClose]);
+
+  const handlePreviousMonth = () => {
+    const currentMonthStart = dayjs().startOf('month');
+    const newMonth = currentMonth.subtract(1, 'month');
+    if (newMonth.isBefore(currentMonthStart, 'month')) {
+      return;
+    }
+    setCurrentMonth(currentMonth.subtract(1, 'month'));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentMonth(currentMonth.add(1, 'month'));
+  };
+
+  const daysInMonth = currentMonth.daysInMonth();
+  const startOfMonth = dayjs(currentMonth).startOf('month');
+  const firstDayOfWeek = startOfMonth.day(); // 0 for Sunday, 1 for Monday
+  const daysBeforeMonth = (firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1); // Adjust for Monday start
+
+  const days = [];
+  // Add placeholder days before the start of the month
+  for (let i = 0; i < daysBeforeMonth; i++) {
+    days.push(null);
+  }
+  // Add days of the month
+  for (let i = 1; i <= daysInMonth; i++) {
+    days.push(dayjs(startOfMonth).date(i));
+  }
+
+  return (
+    <div 
+      ref={calendarRef}
+      style={{
+        position: 'fixed',
+        top: '35%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: 342,
+        height: 257,
+        background: '#F3ECE4',
+        borderRadius: 15,
+        zIndex: 9999,
+        padding: '15px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+      }}
+    >
+      {/* Month Navigation */}
+      <div style={{
+        width: 274.6,
+        height: 24,
+        background: '#FFFBF7',
+        borderRadius: 4,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '15px',
+        padding: '0 10px'
+      }}>
+        <button 
+          onClick={handlePreviousMonth} 
+          style={{ 
+            background: 'none', 
+            border: 'none', 
+            cursor: 'pointer', 
+            color: '#410C00', 
+            fontSize: 16,
+            padding: '4px 8px',
+            opacity: currentMonth.isSame(dayjs().startOf('month'), 'month') ? 0.5 : 1
+          }}
+        >
+          &lt;
+        </button>
+        <span style={{
+          fontFamily: 'SF Pro Text, sans-serif',
+          fontSize: 11,
+          color: '#410C00',
+          textTransform: 'capitalize'
+        }}>
+          {currentMonth.format('MMMM YYYY')}
+        </span>
+        <button 
+          onClick={handleNextMonth} 
+          style={{ 
+            background: 'none', 
+            border: 'none', 
+            cursor: 'pointer', 
+            color: '#410C00', 
+            fontSize: 16,
+            padding: '4px 8px'
+          }}
+        >
+          &gt;
+        </button>
+      </div>
+
+      {/* Day Names */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-around',
+        width: '100%',
+        marginBottom: '8px'
+      }}>
+        {['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС'].map((dayName, index) => (
+          <span 
+            key={dayName} 
+            style={{
+              fontFamily: 'SF Pro Text, sans-serif',
+              fontSize: 11,
+              color: index >= 5 ? '#FF2C2C' : '#410C00',
+              width: 24,
+              textAlign: 'center'
+            }}
+          >
+            {dayName}
+          </span>
+        ))}
+      </div>
+
+      {/* Days Grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(7, 1fr)',
+        gap: '5px',
+        width: '100%',
+        textAlign: 'center'
+      }}>
+        {days.map((day, index) => (
+          <div
+            key={index}
+            style={{
+              fontSize: 11,
+              cursor: day ? 'pointer' : 'default',
+              padding: '4px',
+              borderRadius: 4,
+              background: day && day.isSame(selectedDate, 'day') ? '#410C00' : 'none',
+              color: day && day.isSame(selectedDate, 'day') 
+                ? '#FFFBF7' 
+                : (day && (day.day() === 0 || day.day() === 6) ? '#FF2C2C' : '#410C00'),
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 24,
+              height: 24,
+              margin: '0 auto',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              if (day) {
+                e.currentTarget.style.background = '#410C00';
+                e.currentTarget.style.color = '#FFFBF7';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (day) {
+                e.currentTarget.style.background = day.isSame(selectedDate, 'day') ? '#410C00' : 'none';
+                e.currentTarget.style.color = day.isSame(selectedDate, 'day') 
+                  ? '#FFFBF7' 
+                  : (day.day() === 0 || day.day() === 6 ? '#FF2C2C' : '#410C00');
+              }
+            }}
+            onClick={() => {
+              if (day) {
+                onSelectDate(day.format('YYYY-MM-DD'));
+                onClose();
+              }
+            }}
+          >
+            {day ? day.date() : ''}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
