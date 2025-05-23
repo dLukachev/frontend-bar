@@ -1,10 +1,59 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import dayjs from "dayjs";
+import { get } from '../fetch/get';
 
-function TableModal({ onClose }) {
+// In-memory cache для запросов (5 минут)
+const cache = {};
+function cachedGet(key, fetcher, ttlMs = 5 * 60 * 1000) {
+  const now = Date.now();
+  if (cache[key] && (now - cache[key].ts < ttlMs)) {
+    return Promise.resolve(cache[key].data);
+  }
+  return fetcher().then(data => {
+    cache[key] = { data, ts: now };
+    return data;
+  });
+}
+
+function getInitData() {
+  // Получаем initData из Telegram WebApp
+  return window.Telegram?.WebApp?.initData || '';
+}
+
+function TableModal({ onClose, tableId, selectedDate }) {
   const [isVisible, setIsVisible] = useState(false);
   const [touchStart, setTouchStart] = useState(null);
   const [touchY, setTouchY] = useState(0);
+  const [tableSlots, setTableSlots] = useState([]);
+  const [tableInfo, setTableInfo] = useState(null);
   const sheetRef = React.useRef(null);
+
+  useEffect(() => {
+    if (tableId) {
+      fetchTableSlots(tableId);
+    }
+  }, [tableId, selectedDate]);
+
+  const fetchTableSlots = async (id) => {
+    try {
+      const key = `/reservations/tables/${id}/slots?date=${selectedDate}`;
+      const data = await cachedGet(
+        key,
+        () => get(
+          `/reservations/tables/${id}/slots`,
+          getInitData(),
+          { date: selectedDate },
+          { 'initData': getInitData() }
+        )
+      );
+      setTableSlots(data);
+      if (data.length > 0) {
+        setTableInfo(data[0].table);
+      }
+    } catch (error) {
+      console.error('Error fetching table slots:', error);
+    }
+  };
 
   React.useEffect(() => {
     requestAnimationFrame(() => setIsVisible(true));
@@ -55,7 +104,31 @@ function TableModal({ onClose }) {
         }}
       >
         <div style={{ width: 40, height: 4, background: '#E5DED6', borderRadius: 2, margin: '0 auto 24px', cursor: 'grab' }} />
-        <h1 style={{ fontSize: 31, color: '#410C00', fontFamily: 'Tiffany, serif', margin: 0 }}>Стол №1</h1>
+        {tableInfo && (
+          <>
+            <h1 style={{ fontSize: 31, color: '#410C00', fontFamily: 'Tiffany, serif', margin: 0 }}>
+              Стол №{tableInfo.number}
+            </h1>
+            <div style={{ marginTop: 16, textAlign: 'center' }}>
+              <p style={{ color: '#410C00', fontSize: 18 }}>Вместимость: {tableInfo.capacity} человек</p>
+              <p style={{ color: '#410C00', fontSize: 18 }}>Расположение: {tableInfo.location}</p>
+              <p style={{ color: '#410C00', fontSize: 18 }}>{tableInfo.description}</p>
+            </div>
+            {tableInfo.image_url && (
+              <img 
+                src={tableInfo.image_url} 
+                alt={`Стол №${tableInfo.number}`}
+                style={{ 
+                  width: '100%', 
+                  maxWidth: 300, 
+                  height: 'auto', 
+                  borderRadius: 12,
+                  marginTop: 24
+                }} 
+              />
+            )}
+          </>
+        )}
         <button onClick={handleClose} style={{ marginTop: 24, background: 'none', border: 0, color: '#8B6F53', fontSize: 18, cursor: 'pointer' }}>Закрыть</button>
       </div>
     </>
@@ -64,6 +137,8 @@ function TableModal({ onClose }) {
 
 function Booking() {
   const [showTableModal, setShowTableModal] = useState(false);
+  const [selectedTableId, setSelectedTableId] = useState(null);
+  const [tablesAvailability, setTablesAvailability] = useState([]);
   // Временные интервалы
   const timeSlots = [
     '11:00 – 13:00', '12:00 – 14:00', '13:00 – 15:00', '14:00 – 16:00',
@@ -71,6 +146,51 @@ function Booking() {
     '19:00 – 21:00', '20:00 – 22:00', '21:00 – 23:00'
   ];
   const [activeSlot, setActiveSlot] = useState(0); // по умолчанию 11:00–13:00
+  // Сегодняшняя дата в формате YYYY-MM-DD
+  const today = dayjs().format('YYYY-MM-DD');
+  const selectedDate = today;
+
+  // Функция для получения времени начала и конца выбранного слота
+  function getSlotTimes(slot) {
+    const [start, end] = slot.split('–').map(t => t.trim());
+    return { start, end };
+  }
+
+  // Функция для получения доступности столов
+  const fetchTablesAvailability = async (slot) => {
+    try {
+      const { start, end } = getSlotTimes(slot);
+      const key = `/reservations/tables/slot-availability?restaurant_id=1&date=${selectedDate}&slot_start=${start}&slot_end=${end}`;
+      const data = await cachedGet(
+        key,
+        () => get(
+          '/reservations/tables/slot-availability',
+          getInitData(),
+          {
+            restaurant_id: 1,
+            date: selectedDate,
+            slot_start: start,
+            slot_end: end
+          },
+          { 'initData': getInitData() }
+        )
+      );
+      setTablesAvailability(data);
+    } catch (error) {
+      console.error('Error fetching tables availability:', error);
+    }
+  };
+
+  // При изменении активного слота запрашиваем доступность столов
+  useEffect(() => {
+    fetchTablesAvailability(timeSlots[activeSlot]);
+  }, [activeSlot, selectedDate]);
+
+  // Просто открытие модалки по клику
+  const handleTableClick = (tableId) => {
+    setSelectedTableId(tableId);
+    setShowTableModal(true);
+  };
 
   return (
     <div style={{ background: '#FFFBF7', minHeight: '91vh' }}>
@@ -183,7 +303,7 @@ function Booking() {
           <path d="M262.475 38.9798C262.767 38.9819 263.054 39.0352 263.338 39.1396C263.621 39.244 263.877 39.4144 264.105 39.6509C264.335 39.8874 264.518 40.207 264.654 40.6097C264.793 41.0103 264.863 41.5089 264.865 42.1055C264.865 42.6786 264.808 43.1889 264.693 43.6364C264.578 44.0817 264.413 44.4578 264.197 44.7646C263.984 45.0714 263.726 45.3047 263.421 45.4645C263.116 45.6243 262.773 45.7042 262.392 45.7042C262.002 45.7042 261.656 45.6275 261.353 45.4741C261.05 45.3207 260.804 45.1087 260.615 44.8381C260.425 44.5654 260.307 44.2521 260.26 43.8985L261.235 43.8985C261.299 44.1797 261.429 44.4077 261.625 44.5824C261.823 44.755 262.079 44.8413 262.392 44.8413C262.871 44.8413 263.245 44.6325 263.514 44.2149C263.782 43.7951 263.917 43.2092 263.919 42.457H263.868C263.757 42.6403 263.619 42.798 263.453 42.9301C263.289 43.0622 263.104 43.1644 262.9 43.2369C262.695 43.3093 262.477 43.3455 262.245 43.3455C261.868 43.3455 261.525 43.2529 261.216 43.0675C260.907 42.8821 260.661 42.6275 260.477 42.3036C260.294 41.9798 260.202 41.6101 260.202 41.1946C260.202 40.7813 260.296 40.4063 260.484 40.0696C260.673 39.733 260.938 39.4666 261.276 39.2706C261.617 39.0725 262.017 38.9755 262.475 38.9798ZM262.478 39.8107C262.229 39.8107 262.004 39.8725 261.804 39.9961C261.605 40.1176 261.449 40.2827 261.334 40.4915C261.219 40.6982 261.161 40.9283 261.161 41.1818C261.161 41.4354 261.217 41.6655 261.327 41.8722C261.44 42.0767 261.594 42.2397 261.788 42.3612C261.984 42.4805 262.207 42.5401 262.459 42.5401C262.646 42.5401 262.821 42.5039 262.983 42.4315C263.145 42.359 263.287 42.2589 263.408 42.1311C263.529 42.0011 263.624 41.8541 263.692 41.69C263.761 41.5259 263.795 41.3534 263.795 41.1722C263.795 40.9315 263.737 40.7078 263.622 40.5011C263.509 40.2944 263.354 40.1282 263.156 40.0025C262.957 39.8747 262.732 39.8107 262.478 39.8107Z" fill="#410C00"/>
           
           {/* Кликабельная группа для стола №1 */}
-          <g style={{ cursor: 'pointer' }} onClick={() => setShowTableModal(true)}>
+          <g style={{ cursor: 'pointer' }} onClick={() => handleTableClick(1)}>
             <rect x="61.4548" y="332.182" width="38.4097" height="22.4838" rx="3" fill="#F3ECE4" />
             <rect x="99.8646" y="317.193" width="11.2419" height="38.4097" rx="3" transform="rotate(90 99.8646 317.193)" fill="#F3ECE4" />
             <rect x="99.8646" y="358.413" width="11.2419" height="38.4097" rx="3" transform="rotate(90 99.8646 358.413)" fill="#F3ECE4" />
@@ -250,7 +370,7 @@ function Booking() {
           <rect x="170.708" y="405.249" width="11.2419" height="16.8628" rx="3" transform="rotate(-45 170.708 405.249)" fill="#F3ECE4"/>
           <path d="M158.579 410.501L153.95 415.13L153.25 414.429L157.177 410.501L157.15 410.474L155.32 410.09L155.989 409.421L157.898 409.821L158.579 410.501ZM155.202 416.382L155.708 415.876L158.897 415.819C159.241 415.81 159.533 415.793 159.774 415.769C160.018 415.745 160.228 415.7 160.402 415.634C160.577 415.567 160.732 415.466 160.868 415.331C161.022 415.177 161.118 415.008 161.157 414.825C161.198 414.639 161.186 414.454 161.121 414.269C161.058 414.082 160.948 413.91 160.791 413.753C160.625 413.588 160.447 413.477 160.255 413.421C160.064 413.365 159.874 413.366 159.684 413.423C159.494 413.481 159.316 413.592 159.15 413.758L158.484 413.091C158.765 412.81 159.077 412.628 159.417 412.547C159.758 412.465 160.099 412.48 160.441 412.59C160.784 412.698 161.1 412.896 161.388 413.184C161.678 413.475 161.877 413.789 161.982 414.126C162.091 414.464 162.108 414.795 162.034 415.118C161.962 415.441 161.801 415.726 161.553 415.975C161.381 416.147 161.181 416.282 160.952 416.382C160.724 416.483 160.43 416.555 160.07 416.599C159.712 416.641 159.248 416.664 158.68 416.669L156.798 416.712L156.764 416.746L158.848 418.829L158.249 419.428L155.202 416.382Z" fill="#410C00"/>
         </svg>
-        {showTableModal && <TableModal onClose={() => setShowTableModal(false)} />}
+        {showTableModal && <TableModal onClose={() => setShowTableModal(false)} tableId={selectedTableId} selectedDate={selectedDate} />}
       </div>
     </div>
   );
