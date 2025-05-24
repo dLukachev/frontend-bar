@@ -45,25 +45,6 @@ function EditProfileModal({ onClose, initialData }) {
     requestAnimationFrame(() => setIsVisible(true));
   }, []);
 
-  // Навешиваем touchmove с passive: false
-  useEffect(() => {
-    const sheet = sheetRef.current;
-    if (!sheet) return;
-    const handleMove = (e) => {
-      if (!touchStart) return;
-      const currentY = e.touches[0].clientY;
-      const diff = currentY - touchStart;
-      if (diff > 0) {
-        setTouchY(diff);
-        e.preventDefault();
-      }
-    };
-    sheet.addEventListener('touchmove', handleMove, { passive: false });
-    return () => {
-      sheet.removeEventListener('touchmove', handleMove);
-    };
-  }, [touchStart]);
-
   // Обновлять форму при появлении initialData (только если данные изменились)
   useEffect(() => {
     if (initialData) {
@@ -86,11 +67,16 @@ function EditProfileModal({ onClose, initialData }) {
   };
 
   const handleTouchStart = (e) => {
-    const y = e.touches[0].clientY;
-    const sheetTop = sheetRef.current.getBoundingClientRect().top;
-    if (y - sheetTop > 50) return;
-    setTouchStart(y);
+    setTouchStart(e.touches[0].clientY);
     setTouchY(0);
+  };
+  const handleTouchMove = (e) => {
+    if (!touchStart) return;
+    const currentY = e.touches[0].clientY;
+    const diff = currentY - touchStart;
+    if (diff > 0) {
+      setTouchY(diff);
+    }
   };
   const handleTouchEnd = () => {
     if (!touchStart) return;
@@ -201,6 +187,7 @@ function EditProfileModal({ onClose, initialData }) {
       <div
         ref={sheetRef}
         onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         style={{
           position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 1000,
@@ -217,7 +204,6 @@ function EditProfileModal({ onClose, initialData }) {
           touchAction: 'none',
         }}
       >
-        <div style={{ width: 40, height: 4, background: '#E5DED6', borderRadius: 2, margin: '0 auto 24px', cursor: 'grab' }} />
         <div style={{ width: '100%', paddingLeft: 16, marginBottom: 32 }}>
           <h1 style={{
             fontSize: 31,
@@ -261,7 +247,6 @@ function EditProfileModal({ onClose, initialData }) {
         }
         <div style={{ width: 340, display: 'flex', flexDirection: 'column', gap: 18, marginTop: 'auto' }}>
           <button type="submit" style={buttonStyle} disabled={isLoading} form="edit-profile-form">{isLoading ? 'Сохранение...' : 'Сохранить'}</button>
-          <button onClick={handleClose} type="button" style={{ background: 'none', border: 0, color: '#8B6F53', fontSize: 18, cursor: 'pointer', WebkitTapHighlightColor: 'transparent', tapHighlightColor: 'transparent' }}>Закрыть</button>
         </div>
       </div>
     </>

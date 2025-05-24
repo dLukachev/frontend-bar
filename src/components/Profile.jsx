@@ -244,7 +244,6 @@ function QRSection({ onClose }) {
     // Разрешаем свайп только вниз
     if (diff > 0) {
       setTouchY(diff);
-      e.preventDefault();
     }
   };
 
@@ -655,10 +654,84 @@ function AchievementsSection({ onClose, orders, ordersLoading }) {
 }
 
 function AboutSection({ onClose }) {
-  return <div style={sectionStyle}>
-    <ProfileCloseButton onClick={onClose} />
-    Обо мне (заглушка)
-  </div>;
+  const [isVisible, setIsVisible] = useState(false);
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchY, setTouchY] = useState(0);
+  const sheetRef = useRef(null);
+
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      setIsVisible(true);
+    });
+  }, []);
+
+  const handleClose = () => {
+    setIsVisible(false);
+    setTouchY(0);
+    setTimeout(() => {
+      onClose();
+    }, 300);
+  };
+
+  const handleTouchStart = (e) => {
+    setTouchStart(e.touches[0].clientY);
+    setTouchY(0);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!touchStart) return;
+    const currentY = e.touches[0].clientY;
+    const diff = currentY - touchStart;
+    if (diff > 0) {
+      setTouchY(diff);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart) return;
+    if (touchY > 100) {
+      handleClose();
+    } else {
+      setTouchY(0);
+    }
+    setTouchStart(null);
+  };
+
+  return (
+    <>
+      <div onClick={handleClose} style={{
+        position: 'fixed', left: 0, top: 0, right: 0, bottom: 0, zIndex: 999,
+        background: 'rgba(0,0,0,0.6)',
+        backdropFilter: 'blur(3px)',
+        opacity: isVisible ? 1 : 0,
+        transition: 'opacity 0.3s ease-in-out',
+      }} />
+      <div
+        ref={sheetRef}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{
+          position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 1000,
+          background: '#F3ECE4',
+          borderTopLeftRadius: 24, borderTopRightRadius: 24,
+          boxShadow: '0 -4px 24px #0002',
+          minHeight: 320, maxHeight: '90vh',
+          overflowY: 'auto',
+          transform: isVisible ? `translateY(${touchY}px)` : 'translateY(100%)',
+          transition: touchStart ? 'none' : 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          padding: 24,
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          willChange: 'transform',
+          touchAction: 'none',
+        }}
+      >
+        <div style={{ fontSize: 32, color: '#410C00', fontFamily: 'Tiffany, serif', margin: 'auto' }}>
+          Обо мне (заглушка)
+        </div>
+      </div>
+    </>
+  );
 }
 
 function OrderDetailsModal({ order, onClose, setMainTab }) {
@@ -1377,35 +1450,24 @@ function QRModal({ onClose }) {
   };
 
   const handleTouchStart = (e) => {
-    const touchY = e.touches[0].clientY;
-    const sheetTop = sheetRef.current.getBoundingClientRect().top;
-    if (touchY - sheetTop > 50) return; // Игнорируем касания ниже 50px от верха
-    
     setTouchStart(e.touches[0].clientY);
     setTouchY(0);
   };
 
   const handleTouchMove = (e) => {
     if (!touchStart) return;
-    
     const currentY = e.touches[0].clientY;
     const diff = currentY - touchStart;
-    
-    // Разрешаем свайп только вниз
     if (diff > 0) {
       setTouchY(diff);
-      e.preventDefault();
     }
   };
 
   const handleTouchEnd = () => {
     if (!touchStart) return;
-    
-    // Если свайпнули больше 100px вниз, закрываем
     if (touchY > 100) {
       handleClose();
     } else {
-      // Иначе возвращаем на место
       setTouchY(0);
     }
     setTouchStart(null);
@@ -1440,18 +1502,6 @@ function QRModal({ onClose }) {
           touchAction: 'none',
         }}
       >
-        {/* Индикатор свайпа */}
-        <div 
-          style={{
-            width: 40,
-            height: 4,
-            background: '#E5DED6',
-            borderRadius: 2,
-            margin: '0 auto 24px',
-            cursor: 'grab',
-          }}
-        />
-        
         <h1 style={{
           fontSize: '40px',
           fontWeight: 'bold',
@@ -1462,7 +1512,6 @@ function QRModal({ onClose }) {
         }}>
           Мой QR-код
         </h1>
-        
         <p style={{
           fontSize: '16px',
           color: '#8B6F53',
@@ -1471,7 +1520,6 @@ function QRModal({ onClose }) {
         }}>
           Покажи на кассе
         </p>
-        
         <div style={{
           background: 'white',
           padding: '20px',
@@ -1491,7 +1539,6 @@ function QRModal({ onClose }) {
               opacity: userUniqueCode ? 1 : 0.5
             }}
           />
-          
           {!userUniqueCode && (
             <div style={{
               position: 'absolute',
@@ -1513,7 +1560,6 @@ function QRModal({ onClose }) {
             </div>
           )}
         </div>
-        
         <h2 style={{
           fontSize: 32,
           fontWeight: 'bold',
@@ -1526,7 +1572,6 @@ function QRModal({ onClose }) {
             "Загрузка..." : 
             (userUniqueCode || "Код недоступен")}
         </h2>
-        
         <p style={{
           fontSize: '16px',
           color: '#8B6F53',
@@ -1534,18 +1579,6 @@ function QRModal({ onClose }) {
         }}>
           Или продиктуй
         </p>
-        
-        <button onClick={handleClose} style={{ 
-          margin: '0 auto', 
-          marginTop: '24px', 
-          background: 'none', 
-          border: 0, 
-          color: '#8B6F53', 
-          fontSize: 18, 
-          cursor: 'pointer',
-          WebkitTapHighlightColor: 'transparent',
-          tapHighlightColor: 'transparent'
-        }}>Закрыть</button>
       </div>
     </>
   );

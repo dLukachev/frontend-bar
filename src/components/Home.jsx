@@ -355,7 +355,7 @@ function ProductBottomSheet({ product, onClose, inCart, onAdd, onChangeCount }) 
     if (product) {
       setQuantity(inCart ? inCart.count : 0);
       setIsClosing(false);
-      setTouchY(0); // Сбрасываем позицию при открытии
+      setTouchY(0);
       requestAnimationFrame(() => {
         setIsVisible(true);
       });
@@ -365,43 +365,31 @@ function ProductBottomSheet({ product, onClose, inCart, onAdd, onChangeCount }) 
   const handleClose = () => {
     setIsClosing(true);
     setIsVisible(false);
-    setTouchY(0); // Сбрасываем позицию при закрытии
+    setTouchY(0);
     setTimeout(() => {
       onClose();
     }, 300);
   };
 
   const handleTouchStart = (e) => {
-    // Проверяем, что касание началось в верхней части меню (первые 50px)
-    const touchY = e.touches[0].clientY;
-    const sheetTop = sheetRef.current.getBoundingClientRect().top;
-    if (touchY - sheetTop > 50) return; // Игнорируем касания ниже 50px от верха
-
     setTouchStart(e.touches[0].clientY);
     setTouchY(0);
   };
 
   const handleTouchMove = (e) => {
     if (!touchStart) return;
-    
     const currentY = e.touches[0].clientY;
     const diff = currentY - touchStart;
-    
-    // Разрешаем свайп только вниз
     if (diff > 0) {
       setTouchY(diff);
-      e.preventDefault();
     }
   };
 
   const handleTouchEnd = () => {
     if (!touchStart) return;
-    
-    // Если свайпнули больше 100px вниз, закрываем
     if (touchY > 100) {
       handleClose();
     } else {
-      // Иначе возвращаем на место
       setTouchY(0);
     }
     setTouchStart(null);
@@ -410,7 +398,6 @@ function ProductBottomSheet({ product, onClose, inCart, onAdd, onChangeCount }) 
   const handleQuantityChange = (delta) => {
     const newQuantity = Math.max(0, quantity + delta);
     setQuantity(newQuantity);
-    
     if (inCart) {
       if (newQuantity === 0) {
         onChangeCount(product.id, -inCart.count);
@@ -447,28 +434,20 @@ function ProductBottomSheet({ product, onClose, inCart, onAdd, onChangeCount }) 
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         style={{
-        position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 1000,
-        background: '#FFFBF7',
-        borderTopLeftRadius: 24, borderTopRightRadius: 24,
-        boxShadow: '0 -4px 24px #0002',
-        minHeight: 320, maxHeight: '90vh',
-        overflowY: 'auto',
+          position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 1000,
+          background: '#FFFBF7',
+          borderTopLeftRadius: 24, borderTopRightRadius: 24,
+          boxShadow: '0 -4px 24px #0002',
+          minHeight: 320, maxHeight: '90vh',
+          overflowY: 'auto',
           transform: isVisible ? `translateY(${touchY}px)` : 'translateY(100%)',
           transition: touchStart ? 'none' : 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        padding: 24,
-        display: 'flex', flexDirection: 'column', alignItems: 'stretch',
-        willChange: 'transform',
+          padding: 24,
+          display: 'flex', flexDirection: 'column', alignItems: 'stretch',
+          willChange: 'transform',
           touchAction: 'none',
         }}
       >
-        {/* Swipe indicator bar */}
-        <div style={{
-          width: 40,
-          height: 4,
-          background: '#E5DED6',
-          borderRadius: 2,
-          margin: '0 auto 24px',
-        }} />
         <img src={product.image_url || 'https://s234klg.storage.yandex.net/rdisk/dd165799b546145e86676b0aacac4b2d41f3ea0453ffd577e5e648e46a540f61/682ced58/OEOWJxOEUzw24FFHQhwUhUO6oxhIvquHlGfDPWJKNziue6YF-owovARHIR2IDDeLq8b9Hdj7b1PM1eGsMVerqA==?uid=0&filename=IMG_20250520_151328_102.jpg&disposition=inline&hash=&limit=0&content_type=image%2Fjpeg&owner_uid=0&fsize=49873&hid=19963f6f7ae29874eda8ea51b944752e&media_type=image&tknv=v3&etag=737218b6e0cb0f8661e617e75bc4f3df&ts=6359788940600&s=f33c70d189de2a01bb15ce3c4eadca30d21b002050556e928f8533b292ca1c59&pb=U2FsdGVkX1-I28UKyGRZfUwvGf30w275NNziH45l0lKK9gQk4h8kKuLkkayHvQPC3BQ14PZuG3Hxwzv3PwD4QcrGTB6CkptLTtOl-hK9MnI'} alt={product.name} style={{ width: '100%', maxHeight: 220, objectFit: 'cover', borderRadius: 16, marginBottom: 18 }} />
         <div style={{ fontSize: 26, fontWeight: 600, color: '#410C00', marginBottom: 8 }}>{product.name}</div>
         <div style={{ fontSize: 32, fontWeight: 700, color: '#410C00', fontFamily: 'Tiffany, serif', marginBottom: 8 }}>
@@ -478,35 +457,9 @@ function ProductBottomSheet({ product, onClose, inCart, onAdd, onChangeCount }) 
         <div style={{ fontSize: 15, color: '#410C00', marginBottom: 16 }}>{product.description}</div>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', border: '2px solid #410C00', borderRadius: 15, padding: '4px 16px', minWidth: 80, justifyContent: 'center', background: '#FFFBF7' }}>
-            <button onClick={() => handleQuantityChange(-1)} style={{ 
-              width: 28, 
-              height: 28, 
-              borderRadius: 8, 
-              border: 'none', 
-              background: '#410C00', 
-              color: '#fff', 
-              fontSize: 18, 
-              fontWeight: 700, 
-              cursor: 'pointer', 
-              marginRight: 8,
-              WebkitTapHighlightColor: 'transparent',
-              tapHighlightColor: 'transparent'
-            }}>-</button>
+            <button onClick={() => handleQuantityChange(-1)} style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: '#410C00', color: '#fff', fontSize: 18, fontWeight: 700, cursor: 'pointer', marginRight: 8, WebkitTapHighlightColor: 'transparent', tapHighlightColor: 'transparent' }}>-</button>
             <span style={{ fontSize: 18, fontWeight: 600, minWidth: 24, textAlign: 'center', color: '#410C00' }}>{inCart ? inCart.count : quantity}</span>
-            <button onClick={() => handleQuantityChange(1)} style={{ 
-              width: 28, 
-              height: 28, 
-              borderRadius: 8, 
-              border: 'none', 
-              background: '#410C00', 
-              color: '#fff', 
-              fontSize: 18, 
-              fontWeight: 700, 
-              cursor: 'pointer', 
-              marginLeft: 8,
-              WebkitTapHighlightColor: 'transparent',
-              tapHighlightColor: 'transparent'
-            }}>+</button>
+            <button onClick={() => handleQuantityChange(1)} style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: '#410C00', color: '#fff', fontSize: 18, fontWeight: 700, cursor: 'pointer', marginLeft: 8, WebkitTapHighlightColor: 'transparent', tapHighlightColor: 'transparent' }}>+</button>
           </div>
           <button
             style={{
@@ -526,17 +479,6 @@ function ProductBottomSheet({ product, onClose, inCart, onAdd, onChangeCount }) 
             onClick={handleAddToCart}
           >{inCart ? 'Удалить' : 'В корзину'}</button>
         </div>
-        <button onClick={handleClose} style={{ 
-          margin: '0 auto', 
-          marginTop: 8, 
-          background: 'none', 
-          border: 0, 
-          color: '#8B6F53', 
-          fontSize: 18, 
-          cursor: 'pointer',
-          WebkitTapHighlightColor: 'transparent',
-          tapHighlightColor: 'transparent'
-        }}>Закрыть</button>
       </div>
     </>
   );
