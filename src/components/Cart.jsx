@@ -32,7 +32,7 @@ const Cart = forwardRef(function Cart({ setTab }, ref) {
     if (window.Telegram?.WebApp) {
       window.Telegram.WebApp.BackButton.show();
       window.Telegram.WebApp.BackButton.onClick(() => {
-        setTab('menu');
+        setTab('menu'); // Возвращаем в меню
       });
     }
     return () => {
