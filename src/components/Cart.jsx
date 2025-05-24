@@ -130,36 +130,79 @@ const Cart = forwardRef(function Cart({ setTab }, ref) {
   }
 
   return (
-    <div style={{ background: '#F3ECE4', minHeight: '100vh', padding: '0 0 80px 0', position: 'relative' }}>
-      <div style={{ background: '#F3ECE4', height: 87, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+    <div style={{ 
+      background: '#F3ECE4', 
+      minHeight: '100vh', 
+      padding: '0 0 calc(80px + env(safe-area-inset-bottom)) 0', 
+      position: 'relative' 
+    }}>
+      <div style={{ 
+        background: '#F3ECE4', 
+        height: 'calc(87px + env(safe-area-inset-top))', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        paddingTop: 'env(safe-area-inset-top)'
+      }}>
         <img src="/icons/logo.png" alt="logo" style={{ height: 60 }} />
       </div>
       <TiffanyFontTag />
-      <div style={{ padding: '32px 0 24px 26px', background: '#F3ECE4' }}>
-        <span style={{ fontSize: 31, fontWeight: 400, color: '#410C00', fontFamily: 'Tiffany, serif', letterSpacing: '0.04em' }}>
+      <div style={{ 
+        padding: '32px 0 24px min(26px, 6vw)', 
+        background: '#F3ECE4' 
+      }}>
+        <span style={{ 
+          fontSize: 31, 
+          fontWeight: 400, 
+          color: '#410C00', 
+          fontFamily: 'Tiffany, serif', 
+          letterSpacing: '0.04em' 
+        }}>
           Моя Корзина
         </span>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 16px' }}>
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        gap: 8, 
+        padding: '0 min(16px, 4vw)',
+        maxWidth: 340,
+        margin: '0 auto'
+      }}>
         {cartItems.length === 0 ? (
-          <div style={{ color: '#8B6F53', fontSize: 16, textAlign: 'center', marginTop: -10, padding: '36px' }}>Выберите что-нибудь в меню</div>
+          <div style={{ 
+            color: '#8B6F53', 
+            fontSize: 16, 
+            textAlign: 'center', 
+            marginTop: -10, 
+            padding: '36px' 
+          }}>Выберите что-нибудь в меню</div>
         ) : cartItems.map(item => (
           <div key={item.id} style={{
-            width: 340,
+            width: '100%',
             height: 118,
             background: '#FFFBF7',
             borderRadius: 7,
             boxShadow: '0 2px 8px #0001',
             display: 'flex',
-            marginLeft: 'auto',
-            marginRight: 'auto',
             flexDirection: 'row',
             alignItems: 'stretch',
             overflow: 'hidden',
             marginBottom: 8,
             padding: 0,
           }}>
-            <img src={item.image_url || 'https://s234klg.storage.yandex.net/rdisk/dd165799b546145e86676b0aacac4b2d41f3ea0453ffd577e5e648e46a540f61/682ced58/OEOWJxOEUzw24FFHQhwUhUO6oxhIvquHlGfDPWJKNziue6YF-owovARHIR2IDDeLq8b9Hdj7b1PM1eGsMVerqA==?uid=0&filename=IMG_20250520_151328_102.jpg&disposition=inline&hash=&limit=0&content_type=image%2Fjpeg&owner_uid=0&fsize=49873&hid=19963f6f7ae29874eda8ea51b944752e&media_type=image&tknv=v3&etag=737218b6e0cb0f8661e617e75bc4f3df&ts=6359788940600&s=f33c70d189de2a01bb15ce3c4eadca30d21b002050556e928f8533b292ca1c59&pb=U2FsdGVkX1-I28UKyGRZfUwvGf30w275NNziH45l0lKK9gQk4h8kKuLkkayHvQPC3BQ14PZuG3Hxwzv3PwD4QcrGTB6CkptLTtOl-hK9MnI'} alt={item.name} style={{ width: 150, height: 100, objectFit: 'cover', borderRadius: 7, marginLeft: 10, marginTop: 10 }} />
+            <img 
+              src={item.image_url} 
+              alt={item.name} 
+              style={{ 
+                width: 150, 
+                height: 100, 
+                objectFit: 'cover', 
+                borderRadius: 7, 
+                marginLeft: 10, 
+                marginTop: 10 
+              }} 
+            />
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '12px 16px 12px 16px' }}>
               <div>
                 <div style={{ fontSize: 12, fontWeight: 500, color: '#410C00', marginBottom: 4, textAlign: 'left', lineHeight: 1.1 }}>{item.name}</div>
@@ -188,10 +231,10 @@ const Cart = forwardRef(function Cart({ setTab }, ref) {
       <div style={{
         background: '#FFFBF7',
         borderRadius: 7,
-        margin: '8px 24px 0',
+        margin: '8px min(24px, 6vw) 0',
         padding: '20px 20px 18px 20px',
         boxShadow: '0 2px 8px #0001',
-        width: 338,
+        width: 'min(338px, 90%)',
         height: mode === 'table' ? 124 : 60,
         transition: 'height 0.25s cubic-bezier(.4,0,.2,1)',
         maxWidth: '100%',
@@ -293,7 +336,12 @@ const Cart = forwardRef(function Cart({ setTab }, ref) {
 
       {/* Раздел Возьмите еще */}
       {dishes && dishes.filter(d => d.category?.type === 'more' && !d.is_archived && !d.category?.is_archived && !cartItems.some(ci => ci.id === d.id)).length > 0 && (
-        <div style={{ padding: '0 16px', marginTop: 44 }}>
+        <div style={{ 
+          padding: '0 min(16px, 4vw)', 
+          marginTop: 44,
+          maxWidth: 340,
+          margin: '44px auto 0'
+        }}>
           <div style={{
             fontSize: 32,
             fontWeight: 400,
@@ -301,9 +349,7 @@ const Cart = forwardRef(function Cart({ setTab }, ref) {
             marginBottom: 16,
             fontFamily: 'Tiffany, serif',
             letterSpacing: '0.04em',
-            width: 340,
-            marginLeft: 'auto',
-            marginRight: 'auto',
+            width: '100%',
             textAlign: 'left',
             paddingLeft: 0
           }}>
@@ -312,14 +358,12 @@ const Cart = forwardRef(function Cart({ setTab }, ref) {
           {dishes.filter(d => d.category?.type === 'more' && !d.is_archived && !d.category?.is_archived && !cartItems.some(ci => ci.id === d.id)).map(item => {
             return (
               <div key={item.id} style={{
-                width: 340,
+                width: '100%',
                 height: 118,
                 background: '#FFFBF7',
                 borderRadius: 7,
                 boxShadow: '0 2px 8px #0001',
                 display: 'flex',
-                marginLeft: 'auto',
-                marginRight: 'auto',
                 flexDirection: 'row',
                 alignItems: 'stretch',
                 overflow: 'hidden',

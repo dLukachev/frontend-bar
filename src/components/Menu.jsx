@@ -22,7 +22,34 @@ const shimmerStyle = `
   animation: shimmer 1.2s infinite linear;
   opacity: 0.9;
   pointer-events: none;
-}`;
+}
+
+@media (min-width: 768px) {
+  .menu-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  .menu-card {
+    max-width: 200px !important;
+    height: 280px !important;
+  }
+  .menu-image {
+    height: 120px !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .menu-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+  .menu-card {
+    max-width: 220px !important;
+    height: 300px !important;
+  }
+  .menu-image {
+    height: 140px !important;
+  }
+}
+`;
 
 // Локальное подключение Tiffany только для Menu
 const tiffanyFontFace = `
@@ -322,7 +349,13 @@ function Menu({ setTab }) {
   const cartVisible = cartItems.length > 0;
 
   return (
-    <div style={{ background: '#F3ECE4', minHeight: '200vh', paddingBottom: 83, position: 'relative', overflowX: 'hidden' }}>
+    <div style={{ 
+      background: '#F3ECE4', 
+      minHeight: '200vh', 
+      paddingBottom: 'calc(83px + env(safe-area-inset-bottom))', 
+      position: 'relative', 
+      overflowX: 'hidden'
+    }}>
       <TiffanyFontTag />
       <ShimmerStyleTag />
       {/* Табы */}
@@ -335,11 +368,28 @@ function Menu({ setTab }) {
         background: '#F3ECE4',
         borderBottom: '1px solid #E5DED6'
       }}>
-        <div style={{ background: '#F3ECE4', height: 87, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-        <img src="/icons/logo.png" alt="logo" style={{ height: 60 }} />
+        <div style={{ 
+          background: '#F3ECE4', 
+          height: 'calc(87px + env(safe-area-inset-top))', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          paddingTop: 'env(safe-area-inset-top)'
+        }}>
+          <img src="/icons/logo.png" alt="logo" style={{ height: 60 }} />
         </div>
         <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0' }}>
-          <div style={{ display: 'flex', background: '#FFFBF7', borderRadius: 18, boxShadow: '0 2px 8px #0001', padding: 8, width: '338px', height: 48, justifyContent: 'center', gap: 19 }}>
+          <div style={{ 
+            display: 'flex', 
+            background: '#FFFBF7', 
+            borderRadius: 18, 
+            boxShadow: '0 2px 8px #0001', 
+            padding: 8, 
+            width: 'min(338px, 90%)', 
+            height: 48, 
+            justifyContent: 'center', 
+            gap: 19 
+          }}>
             {['menu', 'bar'].map(tabKey => (
               <button
                 key={tabKey}
@@ -374,7 +424,7 @@ function Menu({ setTab }) {
           background: '#F3ECE4',
           WebkitOverflowScrolling: 'touch',
           msOverflowStyle: 'none',
-          scrollbarWidth: 'none',
+          scrollbarWidth: 'none'
         }}>
           {categoriesLoading ? (
             <CategorySkeleton />
@@ -424,15 +474,30 @@ function Menu({ setTab }) {
           )}
         </div>
       </div>
-      <div style={{ background: '#F3ECE4', height: 87}}></div>
+      <div style={{ background: '#F3ECE4', height: 'calc(87px + env(safe-area-inset-top))'}}></div>
       {/* Все категории и блюда */}
       <div style={{ paddingTop: 140 }}>
         {filteredCategories.map(cat => (
           <div key={cat.id} ref={el => (categoryRefs.current[cat.id] = el)}>
-            <div style={{ fontSize: 32, fontWeight: 700, color: '#410C00', fontFamily: 'Tiffany, serif', margin: '0 0 16px 20px', letterSpacing: '0.04em' }}>
+            <div style={{ 
+              fontSize: 32, 
+              fontWeight: 700, 
+              color: '#410C00', 
+              fontFamily: 'Tiffany, serif', 
+              margin: '0 0 16px 20px', 
+              letterSpacing: '0.04em' 
+            }}>
               {cat.name}
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0 24px', marginBottom: 32 }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(2, 1fr)', 
+              gap: 'min(10px, 2vw)', 
+              padding: '0 min(24px, 6vw)', 
+              marginBottom: 32,
+              maxWidth: '100%',
+              justifyItems: 'center'
+            }}>
               {dishes.filter(dish => dish.category_id === cat.id).map(dish => {
                 const inCart = cartItems.find(ci => ci.id === dish.id);
                 return (
@@ -446,39 +511,121 @@ function Menu({ setTab }) {
                     alignItems: 'flex-start',
                     position: 'relative',
                     height: 230,
-                    width: 164,
+                    width: '100%',
+                    maxWidth: 164,
                     justifyContent: 'flex-start',
                     border: '1.5px solid #E5DED6',
                   }}
                     onClick={() => setSelectedProduct(dish)}
                   >
-                    <img src={dish.image_url} alt={dish.name} style={{ width: 150, height: 100, objectFit: 'cover', borderRadius: 7, marginBottom: 10, marginLeft: -5, marginTop: -5 }} />
-                    <div style={{ fontSize: 12, fontWeight: 500, color: '#410C00', marginBottom: 6, textAlign: 'left' }}>{dish.name}</div>
-                    <div style={{ fontSize: 27, fontFamily: 'Tiffany, serif', fontWeight: 600, color: '#410C00', marginBottom: 10 }}>
-                      {Math.floor(dish.price)} <img src="/icons/rub.svg" alt="₽" style={{ width: 18, height: 17, marginLeft: -1, display: 'inline-block' }} />
-                      <div style={{ fontSize: 12, color: '#410C00', lineHeight: 1, marginTop: 2, fontWeight: 400, fontFamily: 'SF Pro Text, Arial, sans-serif' }}>
+                    <div style={{
+                      width: '100%',
+                      height: 90,
+                      position: 'relative',
+                      margin: '0',
+                      overflow: 'hidden',
+                      borderRadius: 7,
+                      marginBottom: 15
+                    }}>
+                      <img 
+                        src={dish.image_url} 
+                        alt={dish.name} 
+                        style={{ 
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          position: 'absolute',
+                          top: 0,
+                          left: 0
+                        }} 
+                      />
+                    </div>
+                    <div style={{ 
+                      fontSize: 'min(12px, 3vw)', 
+                      fontWeight: 500, 
+                      color: '#410C00', 
+                      marginBottom: 'min(6px, 1.5vw)', 
+                      textAlign: 'left' 
+                    }}>{dish.name}</div>
+                    <div style={{ 
+                      fontSize: 'min(27px, 7vw)', 
+                      fontFamily: 'Tiffany, serif', 
+                      fontWeight: 600, 
+                      color: '#410C00', 
+                      marginBottom: 'min(10px, 2.5vw)' 
+                    }}>
+                      {Math.floor(dish.price)} <img src="/icons/rub.svg" alt="₽" style={{ 
+                        width: 'min(18px, 4.5vw)', 
+                        height: 'min(17px, 4.2vw)', 
+                        marginLeft: -1, 
+                        display: 'inline-block' 
+                      }} />
+                      <div style={{ 
+                        fontSize: 'min(12px, 3vw)', 
+                        color: '#410C00', 
+                        lineHeight: 1, 
+                        marginTop: 'min(2px, 0.5vw)', 
+                        fontWeight: 400, 
+                        fontFamily: 'SF Pro Text, Arial, sans-serif' 
+                      }}>
                         {dish.volume_weight_display}
                       </div>
                     </div>
                     {/* Кнопки -/+ или В корзину */}
                     <div style={{ marginTop: 'auto', width: '100%' }} onClick={e => e.stopPropagation()}>
                       {inCart ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', background: '#410C00', borderRadius: 5, justifyContent: 'center' }}>
-                          <button onClick={() => changeCartItemCount(dish.id, -1)} style={{ width: 36, height: 22, borderRadius: 7, border: 0, background: 'none', color: '#FFFBF7', fontSize: 18, fontWeight: 500, cursor: 'pointer', lineHeight: 1 }}>-</button>
-                          <span style={{ fontSize: 15, fontWeight: 500, minWidth: 28, textAlign: 'center', color: '#FFFBF7' }}>{inCart.count}</span>
-                          <button onClick={() => changeCartItemCount(dish.id, 1)} style={{ width: 36, height: 22, borderRadius: 7, border: 0, background: 'none', color: '#FFFBF7', fontSize: 18, fontWeight: 500, cursor: 'pointer', lineHeight: 1 }}>+</button>
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: 'min(8px, 2vw)', 
+                          width: '100%', 
+                          background: '#410C00', 
+                          borderRadius: 5, 
+                          justifyContent: 'center' 
+                        }}>
+                          <button onClick={() => changeCartItemCount(dish.id, -1)} style={{ 
+                            width: 'min(36px, 9vw)', 
+                            height: 'min(22px, 5.5vw)', 
+                            borderRadius: 7, 
+                            border: 0, 
+                            background: 'none', 
+                            color: '#FFFBF7', 
+                            fontSize: 'min(18px, 4.5vw)', 
+                            fontWeight: 500, 
+                            cursor: 'pointer', 
+                            lineHeight: 1 
+                          }}>-</button>
+                          <span style={{ 
+                            fontSize: 'min(15px, 3.75vw)', 
+                            fontWeight: 500, 
+                            minWidth: 'min(28px, 7vw)', 
+                            textAlign: 'center', 
+                            color: '#FFFBF7' 
+                          }}>{inCart.count}</span>
+                          <button onClick={() => changeCartItemCount(dish.id, 1)} style={{ 
+                            width: 'min(36px, 9vw)', 
+                            height: 'min(22px, 5.5vw)', 
+                            borderRadius: 7, 
+                            border: 0, 
+                            background: 'none', 
+                            color: '#FFFBF7', 
+                            fontSize: 'min(18px, 4.5vw)', 
+                            fontWeight: 500, 
+                            cursor: 'pointer', 
+                            lineHeight: 1 
+                          }}>+</button>
                         </div>
                       ) : (
                         <button
                           style={{
                             width: '100%',
-                            height: 22,
+                            height: 'min(22px, 5.5vw)',
                             border: '1px solid #410C00',
                             borderRadius: 5,
                             background: 'none',
                             color: '#410C00',
                             fontWeight: 300,
-                            fontSize: 11,
+                            fontSize: 'min(11px, 2.75vw)',
                             cursor: 'pointer',
                             transition: 'background 0.2s',
                             padding: 0,
@@ -502,8 +649,8 @@ function Menu({ setTab }) {
       <div
         style={{
           position: 'fixed',
-          left: 260,
-          bottom: 100,
+          right: 20,
+          bottom: 'calc(100px + env(safe-area-inset-bottom))',
           width: 105,
           background: '#FFFBF7',
           borderRadius: 16,
