@@ -263,7 +263,9 @@ function Booking() {
 
   return (
     <div style={{ background: '#FFFBF7', minHeight: '91vh' }}>
-      <div style={{ background: '#FFFBF7', height: 87 }}></div>
+      <div style={{ background: '#FFFBF7', height: 87, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+        <img src="/icons/logo.png" alt="logo" style={{ height: 60 }} />
+        </div>
       {/* Header + Date Select */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: '#FFFBF7', padding: '24px 0 0 20px' }}>
         <span style={{ fontFamily: 'Tiffany, serif', fontSize: 31, color: '#410C00', fontWeight: 400 }}>

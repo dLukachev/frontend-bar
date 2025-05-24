@@ -27,6 +27,21 @@ const Cart = forwardRef(function Cart({ setTab }, ref) {
   const successTimeout = useRef(null);
   const fadeTimeout = useRef(null);
 
+  // Добавляем эффект для кнопки "Назад"
+  React.useEffect(() => {
+    if (window.Telegram?.WebApp) {
+      window.Telegram.WebApp.BackButton.show();
+      window.Telegram.WebApp.BackButton.onClick(() => {
+        setTab('menu');
+      });
+    }
+    return () => {
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.BackButton.hide();
+      }
+    };
+  }, [setTab]);
+
   // Экспортируем функцию для вызова из NavigationBar
   useImperativeHandle(ref, () => ({
     handleOrderSuccess: () => {
@@ -118,36 +133,10 @@ const Cart = forwardRef(function Cart({ setTab }, ref) {
 
   return (
     <div style={{ background: '#F3ECE4', minHeight: '100vh', padding: '0 0 80px 0', position: 'relative' }}>
-      <div style={{ background: '#F3ECE4', height: 87}}></div>
+      <div style={{ background: '#F3ECE4', height: 87, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+        <img src="/icons/logo.png" alt="logo" style={{ height: 60 }} />
+      </div>
       <TiffanyFontTag />
-      {/* Крестик закрытия */}
-      <button
-        onClick={handleClose}
-        style={{
-          position: 'absolute',
-          top: 32,
-          right: 18,
-          width: 24,
-          height: 24,
-          background: 'rgba(255, 255, 255, 0)',
-          border: 'none',
-          borderRadius: '50%',
-          boxShadow: '0 2px 8px #0001',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          zIndex: 100,
-          fontSize: 24,
-          color: '#410C00',
-          transition: 'background 0.2s',
-        }}
-        aria-label="Закрыть корзину"
-      >
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M4.7 4.7L13.3 13.3M13.3 4.7L4.7 13.3" stroke="#410C00" strokeWidth="2" strokeLinecap="round"/>
-        </svg>
-      </button>
       <div style={{ padding: '32px 0 24px 26px', background: '#F3ECE4' }}>
         <span style={{ fontSize: 31, fontWeight: 400, color: '#410C00', fontFamily: 'Tiffany, serif', letterSpacing: '0.04em' }}>
           Моя Корзина

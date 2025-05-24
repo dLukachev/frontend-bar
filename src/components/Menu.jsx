@@ -335,7 +335,9 @@ function Menu({ setTab }) {
         background: '#F3ECE4',
         borderBottom: '1px solid #E5DED6'
       }}>
-        <div style={{ background: '#F3ECE4', height: 87}}></div>
+        <div style={{ background: '#F3ECE4', height: 87, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+        <img src="/icons/logo.png" alt="logo" style={{ height: 60 }} />
+        </div>
         <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0' }}>
           <div style={{ display: 'flex', background: '#FFFBF7', borderRadius: 18, boxShadow: '0 2px 8px #0001', padding: 8, width: '338px', height: 48, justifyContent: 'center', gap: 19 }}>
             {['menu', 'bar'].map(tabKey => (

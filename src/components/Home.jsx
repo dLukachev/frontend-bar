@@ -531,7 +531,9 @@ function Home() {
 
   return (
     <div style={{ background: '#F3ECE4', minHeight: '100vh', padding: '0 0 80px 0', overflowX: 'hidden' }}>
-       <div style={{ background: '#F3ECE4', height: 87}}></div>
+       <div style={{ background: '#F3ECE4', height: 87, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <img src="/icons/logo.png" alt="logo" style={{ height: 60 }} />
+      </div>
       <TiffanyFontTag />
       <ShimmerStyleTag />
       {/* Акции и новости */}

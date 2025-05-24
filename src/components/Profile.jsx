@@ -465,8 +465,27 @@ function AchievementsSection({ onClose, orders, ordersLoading }) {
   const [activeTab, setActiveTab] = useState('achievements'); // 'achievements' or 'collection'
   const { achievements, isLoading, error } = useUserAchievements();
 
+  // Добавляем эффект для кнопки "Назад"
+  React.useEffect(() => {
+    if (window.Telegram?.WebApp) {
+      window.Telegram.WebApp.BackButton.show();
+      window.Telegram.WebApp.BackButton.onClick(() => {
+        onClose();
+      });
+    }
+    return () => {
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.BackButton.hide();
+      }
+    };
+  }, [onClose]);
+
   // Всегда показываем переключатель вкладок
   const tabSwitcher = (
+    <div>
+      <div style={{ background: '#F3ECE4', height: 67, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <img src="/icons/logo.png" alt="logo" style={{ height: 60, marginTop: -12.35}} />
+      </div>
     <div style={{ 
       display: 'flex',
       justifyContent: 'space-between',
@@ -515,6 +534,7 @@ function AchievementsSection({ onClose, orders, ordersLoading }) {
         Коллекция
       </button>
     </div>
+  </div>
   );
 
   if (activeTab === 'collection') {
@@ -647,8 +667,6 @@ function AchievementsSection({ onClose, orders, ordersLoading }) {
           ))}
         </div>
       )}
-      
-      <ProfileCloseButton onClick={onClose} />
     </div>
   );
 }
@@ -997,6 +1015,21 @@ function OrdersSection({ onClose, orders, ordersLoading, setMainTab }) {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [error, setError] = useState(false);
 
+  // Добавляем эффект для кнопки "Назад"
+  React.useEffect(() => {
+    if (window.Telegram?.WebApp) {
+      window.Telegram.WebApp.BackButton.show();
+      window.Telegram.WebApp.BackButton.onClick(() => {
+        onClose();
+      });
+    }
+    return () => {
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.BackButton.hide();
+      }
+    };
+  }, [onClose]);
+
   // Форматирование даты и времени
   const formatOrderDate = (dateString) => {
     const date = new Date(dateString);
@@ -1029,6 +1062,10 @@ function OrdersSection({ onClose, orders, ordersLoading, setMainTab }) {
   }
 
   return (
+    <div>
+      <div style={{ background: '#F3ECE4', height: 67, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <img src="/icons/logo.png" alt="logo" style={{ height: 60, marginTop: 20}} />
+      </div>
     <div style={{ 
       background: '#F3ECE4', 
       minHeight: '100vh', 
@@ -1178,9 +1215,8 @@ function OrdersSection({ onClose, orders, ordersLoading, setMainTab }) {
           ))}
         </div>
       )}
-      
-      <ProfileCloseButton onClick={onClose} />
     </div>
+  </div>
   );
 }
 
@@ -1301,9 +1337,11 @@ function Profile({ currentTab, setMainTab }) {
   if (activeSection === 'cart') return <Cart setTab={setActiveSection} />;
 
   return (
-    <div style={{ background: '#FFFBF7', paddingBottom: 83, height: '93vh', overflow: 'hidden'}}>
+    
+    <div style={{ background: '#EFE9E2', paddingBottom: 83, height: '93vh', overflow: 'hidden'}}>
       {/* Верхний фон */}
-      <div style={{ background: '#EFE9E2', height: 227 }} />
+      <img src="/icons/logo.png" alt="logo" style={{ height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 'auto', marginLeft: 'auto', marginTop: 13.25 }} />
+      <div style={{ background: '#EFE9E2', height: 159.5 }} />
       {/* Основной контейнер с закруглением, наезжающий на верхний фон */}
       <div
         style={{
@@ -1317,7 +1355,8 @@ function Profile({ currentTab, setMainTab }) {
           flexDirection: 'column',
           alignItems: 'center',
           zIndex: 2,
-          position: 'relative'
+          position: 'relative',
+          height: '100%'
         }}
       >
         {/* Аватарка, имя, юзернейм */}
