@@ -121,7 +121,7 @@ export function useUserData() {
   return { userData, isLoading, error, refresh };
 }
 
-// Кэш для orders (10 минут)
+// Кэш для orders (1.5 минуты)
 const ordersCache = { data: null, timestamp: 0 };
 
 export function useOrdersCache() {
@@ -148,7 +148,7 @@ export function useOrdersCache() {
   }, []);
 
   useEffect(() => {
-    if (!ordersCache.data || Date.now() - ordersCache.timestamp > 600000) {
+    if (!ordersCache.data || Date.now() - ordersCache.timestamp > 90000) {
       refresh();
     }
   }, [refresh]);
@@ -601,8 +601,9 @@ function AboutSection({ onClose }) {
   </div>;
 }
 
-function OrderDetailsModal({ order, onClose }) {
-  const { dishes } = useApp();
+function OrderDetailsModal({ order, onClose, setMainTab }) {
+  const { dishes, clearCart, addToCart } = useApp();
+  console.log('Dishes in OrderDetailsModal:', dishes);
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
@@ -626,6 +627,36 @@ function OrderDetailsModal({ order, onClose }) {
       'cancelled': 'Отменен'
     };
     return statusMap[status] || status;
+  };
+
+  const handleRepeatOrder = () => {
+    // Очищаем корзину перед добавлением новых товаров
+    clearCart();
+    
+    console.log('Order items:', order.items);
+    console.log('Available dishes:', dishes);
+    
+    // Добавляем каждый товар из заказа в корзину
+    order.items.forEach(orderItem => {
+      const itemId = orderItem.menu_item_id || orderItem.item_id;
+      console.log('Looking for item with id:', itemId);
+      // Находим соответствующее блюдо в текущем меню
+      const menuItem = dishes.find(d => d.id === itemId);
+      console.log('Found menu item:', menuItem);
+      
+      if (menuItem) {
+        // Добавляем в корзину с тем же количеством
+        for (let i = 0; i < orderItem.quantity; i++) {
+          addToCart(menuItem);
+        }
+      }
+    });
+
+    // Закрываем модальное окно
+    onClose();
+    
+    // Сразу переходим в корзину
+    setMainTab('cart');
   };
 
   return (
@@ -751,7 +782,8 @@ function OrderDetailsModal({ order, onClose }) {
       {/* Товары в заказе */}
       {order.items && order.items.map((item, index) => {
         // Найти блюдо по id в dishes
-        const dish = dishes.find(d => d.id === (item.id || item.item_id));
+        const dish = dishes.find(d => d.menu_item_id === (item.menu_item_id || item.menu_item_id));
+        console.log(`Item ID: ${item.menu_item_id || item.menu_item_id}, Found Dish:`, dish);
         return (
           <div key={index} style={{
             background: '#FFFBF7',
@@ -762,12 +794,12 @@ function OrderDetailsModal({ order, onClose }) {
             boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
           }}>
             <div style={{ width: 128, height: 85, marginRight: 10, overflow: 'hidden', borderRadius: 10, flexShrink: 0 }}>
-              <img src={dish?.image_url || '/placeholder-food.jpg'} alt={dish?.name || ''} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={item.image_url || dish?.image_url || '/placeholder-food.jpg'} alt={item.name || dish?.name || ''} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
             
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div>
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 'bold', color: '#410C00' }}>{dish?.name || ''}</h3>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 'bold', color: '#410C00' }}>{item.name || dish?.name || ''}</h3>
               </div>
               <div>
                 <div style={{ 
@@ -779,7 +811,7 @@ function OrderDetailsModal({ order, onClose }) {
                   color: '#410C00',
                   marginTop: 9
                 }}>
-                  {dish ? Math.floor(dish.price) : ''}
+                  {item.price_at_time ? Math.floor(item.price_at_time) : (dish ? Math.floor(dish.price) : '')}
                   <img src="/icons/rub.svg" alt="₽" style={{ width: 16, height: 16, marginLeft: 2 }} />
                 </div>
                 <div style={{ 
@@ -797,24 +829,27 @@ function OrderDetailsModal({ order, onClose }) {
         );
       })}
       
-      <button style={{
-        width: 340,
-        height: 45,
-        background: '#FFFBF7',
-        border: 'none',
-        borderRadius: 10,
-        fontSize: 14,
-        color: '#410C00',
-        fontWeight: 'bold',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        margin: '24px auto',
-        cursor: 'pointer',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
-        WebkitTapHighlightColor: 'transparent',
-        tapHighlightColor: 'transparent',
-      }}>
+      <button 
+        onClick={handleRepeatOrder}
+        style={{
+          width: 340,
+          height: 45,
+          background: '#FFFBF7',
+          border: 'none',
+          borderRadius: 10,
+          fontSize: 14,
+          color: '#410C00',
+          fontWeight: 'bold',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          margin: '24px auto',
+          cursor: 'pointer',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+          WebkitTapHighlightColor: 'transparent',
+          tapHighlightColor: 'transparent',
+        }}
+      >
         <img src="/icons/redo.svg" alt="redo" style={{ width: 16, height: 16, marginRight: 8 }} />
         Повторить заказ
       </button>
@@ -824,8 +859,8 @@ function OrderDetailsModal({ order, onClose }) {
   );
 }
 
-function OrdersSection({ onClose, orders, ordersLoading }) {
-  const [activeTab, setActiveTab] = useState('active'); // 'active' or 'completed'
+function OrdersSection({ onClose, orders, ordersLoading, setMainTab }) {
+  const [activeTab, setActiveTab] = useState('active');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [error, setError] = useState(false);
 
@@ -850,10 +885,10 @@ function OrdersSection({ onClose, orders, ordersLoading }) {
     } else {
       return ['completed', 'cancelled'].includes(order.status);
     }
-  });
+  }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
   if (selectedOrder) {
-    return <OrderDetailsModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />;
+    return <OrderDetailsModal order={selectedOrder} onClose={() => setSelectedOrder(null)} setMainTab={setMainTab} />;
   }
 
   if (ordersLoading) {
@@ -1093,7 +1128,7 @@ function ProfileButton({ icon, text, onClick, rightElement }) {
   );
 }
 
-function Profile({ currentTab }) {
+function Profile({ currentTab, setMainTab }) {
   const [activeSection, setActiveSection] = useState('main');
   const [showQRModal, setShowQRModal] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
@@ -1129,7 +1164,8 @@ function Profile({ currentTab }) {
 
   if (activeSection === 'achievements') return <AchievementsSection onClose={() => setActiveSection('main')} orders={orders} ordersLoading={ordersLoading} />;
   if (activeSection === 'about') return <AboutSection onClose={() => setActiveSection('main')} />;
-  if (activeSection === 'orders') return <OrdersSection onClose={() => setActiveSection('main')} orders={orders} ordersLoading={ordersLoading} />;
+  if (activeSection === 'orders') return <OrdersSection onClose={() => setActiveSection('main')} orders={orders} ordersLoading={ordersLoading} setMainTab={setMainTab} />;
+  if (activeSection === 'cart') return <Cart setTab={setActiveSection} />;
 
   return (
     <div style={{ background: '#FFFBF7', paddingBottom: 83, height: '93vh', overflow: 'hidden'}}>

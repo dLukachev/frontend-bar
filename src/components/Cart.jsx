@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useRef, useState, forwardRef, useImperativeHandle } from 'react';
 import { useApp } from '../context/AppContext';
+import { post } from '../fetch/post';
 
 // Локальное подключение Tiffany только для Cart
 const tiffanyFontFace = `
@@ -15,10 +16,37 @@ function TiffanyFontTag() {
   return <style>{tiffanyFontFace}</style>;
 }
 
-function Cart({ setTab }) {
-  const { cartItems, changeCartItemCount, addToCart, categories, dishes } = useApp();
+const Cart = forwardRef(function Cart({ setTab }, ref) {
+  const { cartItems, changeCartItemCount, addToCart, categories, dishes, clearCart } = useApp();
   const [mode, setMode] = React.useState('table'); // 'table' или 'takeaway'
   const [tableNumber, setTableNumber] = React.useState('');
+  const [orderSuccess, setOrderSuccess] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState(null);
+  const successTimeout = useRef(null);
+  const fadeTimeout = useRef(null);
+
+  // Экспортируем функцию для вызова из NavigationBar
+  useImperativeHandle(ref, () => ({
+    handleOrderSuccess: () => {
+      setOrderSuccess(true);
+      setModalVisible(false); // Сначала скрыто
+      requestAnimationFrame(() => setModalVisible(true)); // Плавное появление
+      successTimeout.current = setTimeout(() => {
+        setModalVisible(false); // Плавное исчезновение
+        fadeTimeout.current = setTimeout(() => {
+          setOrderSuccess(false);
+          setTab('menu');
+        }, 500); // Время анимации исчезновения
+      }, 1800);
+    }
+  }));
+
+  React.useEffect(() => () => {
+    if (successTimeout.current) clearTimeout(successTimeout.current);
+    if (fadeTimeout.current) clearTimeout(fadeTimeout.current);
+  }, []);
 
   // Логируем данные от бэка
   React.useEffect(() => {
@@ -33,6 +61,60 @@ function Cart({ setTab }) {
 
   // Итоговая сумма заказа
   const total = cartItems.reduce((sum, item) => sum + (item.price * item.count), 0);
+
+  // Новый обработчик оформления заказа
+  const handleOrder = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Собираем данные для заказа
+      const orderPayload = {
+        user_id: 0, // если есть user_id, подставьте его
+        restaurant_id: 1, // если есть другой id, подставьте его
+        table_id: mode === 'table' ? Number(tableNumber) || 0 : 0,
+        status: 'pending',
+        total_amount: total,
+        items: cartItems.map(item => ({
+          menu_item_id: item.id,
+          quantity: item.count,
+          price_at_time: item.price
+        }))
+      };
+      const initData = window.Telegram?.WebApp?.initData || '';
+      await post('/orders', initData, orderPayload);
+      setOrderSuccess(true);
+      clearCart && clearCart();
+      setTimeout(() => {
+        setOrderSuccess(false);
+        setTab('menu');
+      }, 1800);
+    } catch (e) {
+      setError('Ошибка при оформлении заказа. Попробуйте еще раз.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (orderSuccess) {
+    return (
+      <div style={{
+        position: 'fixed', left: 0, top: 0, right: 0, bottom: 0,
+        background: 'rgba(255,251,247,0.96)', zIndex: 9999,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        pointerEvents: 'auto',
+      }}>
+        <div style={{
+          opacity: modalVisible ? 1 : 0,
+          transform: modalVisible ? 'scale(1)' : 'scale(0.96)',
+          transition: 'opacity 0.5s, transform 0.5s',
+          fontFamily: 'Tiffany, serif', fontSize: 31, color: '#410C00',
+          textAlign: 'center',
+        }}>
+          Спасибо за заказ!
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ background: '#F3ECE4', minHeight: '100vh', padding: '0 0 80px 0', position: 'relative' }}>
@@ -298,6 +380,6 @@ function Cart({ setTab }) {
       )}
     </div>
   );
-}
+});
 
 export default Cart; 

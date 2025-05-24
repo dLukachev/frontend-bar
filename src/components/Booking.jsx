@@ -38,15 +38,11 @@ function TableModal({ onClose, tableId, selectedDate, onSelectTime }) {
 
   const fetchTableSlots = async (id) => {
     try {
-      const key = `/reservations/tables/${id}/slots?date=${selectedDate}`;
-      const data = await cachedGet(
-        key,
-        () => get(
-          `/reservations/tables/${id}/slots`,
-          getInitData(),
-          { date: selectedDate },
-          { 'initData': getInitData() }
-        )
+      const data = await get( // <- Здесь теперь прямой вызов get, без cachedGet
+        `/reservations/tables/${id}/slots`,
+        getInitData(),
+        { date: selectedDate },
+        { 'initData': getInitData() }
       );
       setTableSlots(data);
       if (data.length > 0) {
@@ -724,14 +720,28 @@ function BookingDetailsModal({ onClose, tableInfo, tableSlots }) {
           console.log('Booking successful:', response);
           // Assuming booking API call is successful, close modal
           handleClose();
-          // Clear cached table availability data for all time slots
+
+          // Clear cached table availability data for all time slots for the current date
           timeSlots.forEach(slot => {
             const { start, end } = getSlotTimes(slot);
             const key = `/reservations/tables/slot-availability?restaurant_id=1&date=${selectedDate}&slot_start=${start}&slot_end=${end}`;
             delete cache[key];
           });
-          // We don't explicitly refetch here, the next time the user selects a slot
-          // the cache will be empty and it will fetch fresh data.
+
+          // Clear cache for the specific table's slots
+          const tableSlotsKey = `/reservations/tables/${tableInfo.id}/slots?date=${selectedDate}`;
+          delete cache[tableSlotsKey];
+
+          // Also clear cache for slots of all tables currently in tablesAvailability
+          // This ensures when any table modal is opened, it fetches fresh slot data
+          tablesAvailability.forEach(table => {
+              const key = `/reservations/tables/${table.id}/slots?date=${selectedDate}`;
+              delete cache[key];
+          });
+
+          // Fetch fresh data for the currently active slot (for the main SVG view)
+          fetchTablesAvailability(timeSlots[activeSlot], true);
+
       } catch (error) {
           console.error('Booking failed:', error);
           // TODO: Handle booking error (show message to user)

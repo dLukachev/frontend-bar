@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { post } from '../fetch/post';
+
 const homeIcon = '/icons/home.svg';
 const homeActiveIcon = '/icons/home-active.svg';
 const menuIcon = '/icons/menu.svg';
@@ -86,8 +88,10 @@ const btnStyle = (active) => ({
   tapHighlightColor: 'transparent',
 });
 
-function NavigationBar({ currentTab, onTabChange }) {
-  const { cartItems } = useApp();
+function NavigationBar({ currentTab, onTabChange, cartRef }) {
+  const { cartItems, clearCart, mode, tableNumber } = useApp();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const total = cartItems.reduce((sum, item) => sum + (item.price * item.count), 0);
 
   const handleTabClick = (key) => {
@@ -96,11 +100,47 @@ function NavigationBar({ currentTab, onTabChange }) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
+
+  const handleOrder = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const orderPayload = {
+        user_id: 0, // если есть user_id, подставьте
+        restaurant_id: 1, // если есть другой id, подставьте
+        status: 'pending',
+        total_amount: total,
+        items: cartItems.map(item => ({
+          menu_item_id: item.id,
+          quantity: item.count,
+          price_at_time: item.price
+        }))
+      };
+      if (mode === 'table') {
+        if (!tableNumber || Number(tableNumber) === 0) {
+          setError('Введите номер стола');
+          setLoading(false);
+          return;
+        }
+        orderPayload.table_id = Number(tableNumber);
+      }
+      const initData = window.Telegram?.WebApp?.initData || '';
+      await post('/orders', initData, orderPayload);
+      clearCart && clearCart();
+      cartRef.current?.handleOrderSuccess();
+    } catch (e) {
+      setError('Ошибка при оформлении заказа. Попробуйте еще раз.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <nav style={navStyle}>
       {currentTab === 'cart' && cartItems.length > 0 ? (
         <button
-          onClick={() => onTabChange('order')}
+          onClick={handleOrder}
+          disabled={loading || (mode === 'table' && (!tableNumber || Number(tableNumber) === 0))}
           style={{
             background: '#3B1707',
             color: '#fff',
@@ -112,20 +152,28 @@ function NavigationBar({ currentTab, onTabChange }) {
             height: 46,
             margin: '0 auto',
             boxShadow: '0 2px 8px #0002',
-            cursor: 'pointer',
+            cursor: loading ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: 10,
             WebkitTapHighlightColor: 'transparent',
             tapHighlightColor: 'transparent',
+            opacity: loading ? 0.7 : 1,
+            position: 'relative',
           }}
         >
-          <span>Оформить заказ  ·</span>
-          <span style={{ fontFamily: 'Tiffany, serif', fontSize: 22, fontWeight: 400, display: 'flex', alignItems: 'center', gap: 4 }}>
-            {total}
-            <img src="/icons/rub.svg" alt="₽" style={{ width: 16, height: 15, marginLeft: 2, marginTop: -1, display: 'inline-block', verticalAlign: 'middle', filter: 'brightness(0) saturate(100%) invert(1)' }} />
-          </span>
+          {loading ? (
+            'Оформляем...'
+          ) : (
+            <>
+              <span>Оформить заказ  ·</span>
+              <span style={{ fontFamily: 'Tiffany, serif', fontSize: 22, fontWeight: 400, display: 'flex', alignItems: 'center', gap: 4 }}>
+                {total}
+                <img src="/icons/rub.svg" alt="₽" style={{ width: 16, height: 15, marginLeft: 2, marginTop: -1, display: 'inline-block', verticalAlign: 'middle', filter: 'brightness(0) saturate(100%) invert(1)' }} />
+              </span>
+            </>
+          )}
         </button>
       ) : (
         tabs.map(tab => (
@@ -138,6 +186,7 @@ function NavigationBar({ currentTab, onTabChange }) {
           </button>
         ))
       )}
+      {error && <div style={{ color: '#B00020', fontSize: 14, position: 'absolute', bottom: 60, left: 0, right: 0, textAlign: 'center' }}>{error}</div>}
     </nav>
   );
 }

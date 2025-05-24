@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import NavigationBar from './components/NavigationBar';
 import Home from './components/Home';
 import Menu from './components/Menu';
@@ -19,6 +19,7 @@ const TABS = {
 
 function App() {
   const [tab, setTab] = useState(TABS.HOME);
+  const cartRef = useRef(null);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -53,10 +54,10 @@ function App() {
       content = <Booking />;
       break;
     case TABS.PROFILE:
-      content = <Profile currentTab={tab} />;
+      content = <Profile currentTab={tab} setMainTab={setTab} />;
       break;
     case TABS.CART:
-      content = <Cart setTab={setTab} />;
+      content = <Cart ref={cartRef} setTab={setTab} />;
       break;
     case TABS.ORDER:
       content = <Order setTab={setTab} />;
@@ -69,7 +70,7 @@ function App() {
     <AppProvider>
       <div style={{ paddingBottom: 64 }}>
         {content}
-        <NavigationBar currentTab={tab} onTabChange={setTab} />
+        <NavigationBar currentTab={tab} onTabChange={setTab} cartRef={cartRef} />
       </div>
     </AppProvider>
   );
