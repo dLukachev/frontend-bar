@@ -92,11 +92,14 @@ const bannerImages = [
   '/banners/b3.png',
 ];
 
-function Slider() {
+function Slider({ cardWidth, cardHeight }) {
   const [active, setActive] = useState(0);
   const startX = useRef(null);
   const lastX = useRef(null);
   const isDragging = useRef(false);
+
+  // Определяем, находимся ли мы на внутреннем экране Fold
+  const isFoldInnerScreen = window.innerWidth >= 717 && window.innerWidth <= 1236;
 
   // Swipe handlers
   const onTouchStart = (e) => {
@@ -120,8 +123,6 @@ function Slider() {
     lastX.current = null;
   };
 
-  const cardWidthPx = 340;
-  const cardHeightPx = 190;
   const borderRadiusPx = 7;
   const gap = 4;
   const containerStyle = {
@@ -130,7 +131,7 @@ function Slider() {
     alignItems: 'center',
     position: 'relative',
     margin: `0 0 24px 0`,
-    height: cardHeightPx,
+    height: cardHeight,
     touchAction: 'pan-y',
     overflow: 'visible',
   };
@@ -148,15 +149,15 @@ function Slider() {
     >
       <div style={containerStyle}>
         {bannerImages.map((img, idx) => {
-          const offset = (idx - active) * (cardWidthPx + gap);
+          const offset = (idx - active) * (cardWidth + gap);
           return (
             <div
               key={idx}
               style={{
-                width: cardWidthPx,
-                minWidth: cardWidthPx,
-                maxWidth: cardWidthPx,
-                height: cardHeightPx,
+                width: cardWidth,
+                minWidth: cardWidth,
+                maxWidth: cardWidth,
+                height: cardHeight,
                 borderRadius: borderRadiusPx,
                 background: '#2B1B12',
                 display: 'flex',
@@ -254,7 +255,7 @@ function SliderSkeleton() {
 }
 
 // Скелетон для блока достижений
-function AchievementSkeleton() {
+function AchievementSkeleton({ scaleFactor }) {
   return (
     <div style={{
       background: '#fff',
@@ -295,7 +296,7 @@ function AchievementSkeleton() {
 }
 
 // Скелетон для летней новинки
-function SummerNoveltySkeleton() {
+function SummerNoveltySkeleton({ scaleFactor }) {
   return (
     <div style={{
       display: 'flex',
@@ -343,7 +344,7 @@ function SummerNoveltySkeleton() {
 }
 
 // Bottom sheet для подробной карточки товара
-function ProductBottomSheet({ product, onClose, inCart, onAdd, onChangeCount }) {
+function ProductBottomSheet({ product, onClose, inCart, onAdd, onChangeCount, scaleFactor, isFoldInnerScreen, isIPad, imageWidth, imageHeight }) {
   const [quantity, setQuantity] = React.useState(0);
   const [isClosing, setIsClosing] = React.useState(false);
   const [isVisible, setIsVisible] = React.useState(false);
@@ -434,21 +435,39 @@ function ProductBottomSheet({ product, onClose, inCart, onAdd, onChangeCount }) 
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         style={{
-          position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 1000,
+          position: 'fixed', 
+          left: isFoldInnerScreen ? '50%' : 0, 
+          right: isFoldInnerScreen ? 'auto' : 0, 
+          bottom: 0, 
+          zIndex: 1000,
           background: '#FFFBF7',
-          borderTopLeftRadius: 24, borderTopRightRadius: 24,
+          borderTopLeftRadius: 24, 
+          borderTopRightRadius: 24,
           boxShadow: '0 -4px 24px #0002',
-          minHeight: 320, maxHeight: '90vh',
-          overflowY: 'auto',
-          transform: isVisible ? `translateY(${touchY}px)` : 'translateY(100%)',
+          minHeight: 320, 
+          maxHeight: '90vh',
+          width: isFoldInnerScreen ? '717px' : '100%',
+          transform: isVisible 
+            ? `translateY(${touchY}px) ${isFoldInnerScreen ? 'translateX(-50%)' : ''}` 
+            : `translateY(100%) ${isFoldInnerScreen ? 'translateX(-50%)' : ''}`,
           transition: touchStart ? 'none' : 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           padding: 24,
-          display: 'flex', flexDirection: 'column', alignItems: 'stretch',
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'stretch',
           willChange: 'transform',
           touchAction: 'none',
         }}
       >
-        <img src={product.image_url || 'https://s234klg.storage.yandex.net/rdisk/dd165799b546145e86676b0aacac4b2d41f3ea0453ffd577e5e648e46a540f61/682ced58/OEOWJxOEUzw24FFHQhwUhUO6oxhIvquHlGfDPWJKNziue6YF-owovARHIR2IDDeLq8b9Hdj7b1PM1eGsMVerqA==?uid=0&filename=IMG_20250520_151328_102.jpg&disposition=inline&hash=&limit=0&content_type=image%2Fjpeg&owner_uid=0&fsize=49873&hid=19963f6f7ae29874eda8ea51b944752e&media_type=image&tknv=v3&etag=737218b6e0cb0f8661e617e75bc4f3df&ts=6359788940600&s=f33c70d189de2a01bb15ce3c4eadca30d21b002050556e928f8533b292ca1c59&pb=U2FsdGVkX1-I28UKyGRZfUwvGf30w275NNziH45l0lKK9gQk4h8kKuLkkayHvQPC3BQ14PZuG3Hxwzv3PwD4QcrGTB6CkptLTtOl-hK9MnI'} alt={product.name} style={{ width: '100%', maxHeight: 220, objectFit: 'cover', borderRadius: 16, marginBottom: 18 }} />
+        <img src={product.image_url} alt={product.name} style={{ 
+          width: isFoldInnerScreen ? imageWidth : '100%',
+          maxHeight: imageHeight, 
+          objectFit: 'cover', 
+          borderRadius: 16, 
+          marginBottom: 18,
+          display: 'block',
+          margin: isFoldInnerScreen ? '0 auto' : '0 0 18px 0'
+        }} />
         <div style={{ fontSize: 26, fontWeight: 600, color: '#410C00', marginBottom: 8 }}>{product.name}</div>
         <div style={{ fontSize: 32, fontWeight: 700, color: '#410C00', fontFamily: 'Tiffany, serif', marginBottom: 8 }}>
           {Math.floor(product.price)} <img src="/icons/rub.svg" alt="₽" style={{ width: 18, height: 17, marginLeft: -1, display: 'inline-block' }} />
@@ -486,11 +505,29 @@ function ProductBottomSheet({ product, onClose, inCart, onAdd, onChangeCount }) 
 
 function Home() {
   const [selectedProduct, setSelectedProduct] = useState(null);
-  // const initData = window?.Telegram?.WebApp?.initData;
-  // РАСКОММЕНТИРОВАТЬ ПРИ ПЕРЕХОДЕ НА ПРОД
-  // if (!initData) {
-  //   return <EmptyState />;
-  // }
+  const [isLoading, setIsLoading] = useState(true);
+  const [devicePixelRatio, setDevicePixelRatio] = useState(window.devicePixelRatio || 1);
+
+  // Определяем тип устройства и размеры экрана
+  const isFoldInnerScreen = window.innerWidth >= 717 && window.innerWidth <= 1236;
+  const isIPad = /iPad/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  
+  // Базовые размеры для разных устройств
+  const baseFontSize = isIPad ? 16 : 14;
+  const scaleFactor = isIPad ? 1.5 : 1;
+  const cardWidth = isFoldInnerScreen ? 685 : (isIPad ? 510 : 340);
+  const cardHeight = isFoldInnerScreen ? 380 : (isIPad ? 285 : 190);
+  const imageWidth = isFoldInnerScreen ? 685 : (isIPad ? 510 : 340);
+  const imageHeight = isFoldInnerScreen ? 440 : (isIPad ? 330 : 220);
+
+  // Обновляем devicePixelRatio при изменении размера окна
+  useEffect(() => {
+    const handleResize = () => {
+      setDevicePixelRatio(window.devicePixelRatio || 1);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const {
     achievement,
@@ -520,32 +557,104 @@ function Home() {
     if (unearned.length === 0 && randomAchievement) {
       setRandomAchievement(null);
     }
-    // eslint-disable-next-line
-  }, [achievementsLoading]);
+  }, [achievementsLoading, unearned, randomAchievement]);
 
   // Новинки: блюда с type: 'new'
   const noveltyItems = dishes ? dishes.filter(d => d.category?.type === 'new' && !d.is_archived && !d.category?.is_archived) : [];
 
-  console.log('dishes:', dishes);
-  console.log('noveltyItems:', noveltyItems);
+  // Проверяем загрузку всех данных
+  useEffect(() => {
+    if (!categoriesLoading && !achievementLoading && !noveltyLoading && !achievementsLoading) {
+      setIsLoading(false);
+    }
+  }, [categoriesLoading, achievementLoading, noveltyLoading, achievementsLoading]);
+
+  // Если идет загрузка, показываем скелетон
+  if (isLoading) {
+    return (
+      <div style={{ 
+        background: '#F3ECE4', 
+        minHeight: '100vh', 
+        padding: '0 0 80px 0', 
+        overflowX: 'hidden',
+        maxWidth: isFoldInnerScreen ? '717px' : '100%',
+        margin: isFoldInnerScreen ? '0 auto' : '0',
+        fontSize: `${baseFontSize * scaleFactor}px`
+      }}>
+        <div style={{ 
+          background: '#F3ECE4', 
+          height: isIPad ? 120 : 87, 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          position: isFoldInnerScreen ? 'sticky' : 'relative',
+          top: 0,
+          zIndex: 100
+        }}>
+          <img src="/icons/logo.png" alt="logo" style={{ height: isIPad ? 80 : 60 }} />
+        </div>
+        <TiffanyFontTag />
+        <ShimmerStyleTag />
+        <AchievementSkeleton scaleFactor={scaleFactor} />
+        <SummerNoveltySkeleton scaleFactor={scaleFactor} />
+      </div>
+    );
+  }
+
+  // Если есть ошибки, показываем сообщение об ошибке
+  if (achievementError || categoriesError || noveltyError) {
+    return (
+      <div style={{ 
+        padding: 20, 
+        textAlign: 'center', 
+        color: '#410C00',
+        background: '#F3ECE4',
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <h2>Произошла ошибка при загрузке данных</h2>
+        <p>Пожалуйста, попробуйте обновить страницу</p>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ background: '#F3ECE4', minHeight: '100vh', padding: '0 0 80px 0', overflowX: 'hidden' }}>
-       <div style={{ background: '#F3ECE4', height: 87, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <img src="/icons/logo.png" alt="logo" style={{ height: 60 }} />
+    <div style={{ 
+      background: '#F3ECE4', 
+      minHeight: '100vh', 
+      padding: '0 0 80px 0', 
+      overflowX: 'hidden',
+      maxWidth: isFoldInnerScreen ? '717px' : '100%',
+      margin: isFoldInnerScreen ? '0 auto' : '0',
+      fontSize: `${baseFontSize * scaleFactor}px`
+    }}>
+      <div style={{ 
+        background: '#F3ECE4', 
+        height: isIPad ? 120 : 87, 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        position: isFoldInnerScreen ? 'sticky' : 'relative',
+        top: 0,
+        zIndex: 100
+      }}>
+        <img src="/icons/logo.png" alt="logo" style={{ height: isIPad ? 80 : 60 }} />
       </div>
       <TiffanyFontTag />
       <ShimmerStyleTag />
       {/* Акции и новости */}
-      <div style={{ padding: '24px 16px 0 16px' }}>
+      <div style={{ padding: `${24 * scaleFactor}px ${16 * scaleFactor}px 0 ${16 * scaleFactor}px` }}>
         <div style={{
-          fontSize: 32,
+          fontSize: `${32 * scaleFactor}px`,
           fontWeight: 400,
           color: '#410C00',
-          marginBottom: 16,
+          marginBottom: `${16 * scaleFactor}px`,
           fontFamily: 'Tiffany, serif',
           letterSpacing: '0.04em',
-          width: 340,
+          width: isFoldInnerScreen ? '100%' : cardWidth,
           marginLeft: 'auto',
           marginRight: 'auto',
           textAlign: 'left',
@@ -553,38 +662,47 @@ function Home() {
         }}>
           Акции и новости
         </div>
-        <Slider />
+        <Slider cardWidth={cardWidth} cardHeight={cardHeight} />
       </div>
 
       {/* Случайное невыполненное достижение пользователя */}
       {achievementsLoading ? (
-        <AchievementSkeleton />
+        <AchievementSkeleton scaleFactor={scaleFactor} />
       ) : randomAchievement ? (
-        <div style={{ background: '#FFFBF7', borderRadius: 7, margin: '0 16px 32px', padding: 20, boxShadow: '0 2px 8px #0001', height: 93, width: 340, marginLeft: 'auto', marginRight: 'auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-            <div style={{ marginLeft: -7 }}>
-              <div style={{ fontWeight: 700, fontSize: 20, color: '#410C00' }}>{randomAchievement.name}</div>
-              <div style={{ fontSize: 11, color: '#410C00', marginTop: 2 }}>{randomAchievement.description}</div>
+        <div style={{ 
+          background: '#FFFBF7', 
+          borderRadius: `${7 * scaleFactor}px`, 
+          margin: `0 ${16 * scaleFactor}px ${32 * scaleFactor}px`, 
+          padding: `${20 * scaleFactor}px`, 
+          boxShadow: '0 2px 8px #0001', 
+          height: `${93 * scaleFactor}px`, 
+          width: isFoldInnerScreen ? `calc(100% - ${32 * scaleFactor}px)` : cardWidth, 
+          marginLeft: 'auto', 
+          marginRight: 'auto' 
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: `${8 * scaleFactor}px` }}>
+            <div style={{ marginLeft: `${-7 * scaleFactor}px` }}>
+              <div style={{ fontWeight: 700, fontSize: `${20 * scaleFactor}px`, color: '#410C00' }}>{randomAchievement.name}</div>
+              <div style={{ fontSize: `${11 * scaleFactor}px`, color: '#410C00', marginTop: `${2 * scaleFactor}px` }}>{randomAchievement.description}</div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', minWidth: 70, marginTop: 0 }}>
-              <span style={{ fontFamily: 'Tiffany, serif', fontWeight: 400, fontSize: 27, color: '#410C00', lineHeight: 1, marginTop: 0, paddingTop: 0 }}>{'+' + randomAchievement.required_points}</span>
-              <span style={{ fontSize: 11, color: '#8B6F53', fontWeight: 400, marginTop: 0, lineHeight: 1 }}>{'перепелок'}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', minWidth: `${70 * scaleFactor}px`, marginTop: 0 }}>
+              <span style={{ fontFamily: 'Tiffany, serif', fontWeight: 400, fontSize: `${27 * scaleFactor}px`, color: '#410C00', lineHeight: 1, marginTop: 0, paddingTop: 0 }}>{'+' + randomAchievement.required_points}</span>
+              <span style={{ fontSize: `${11 * scaleFactor}px`, color: '#8B6F53', fontWeight: 400, marginTop: 0, lineHeight: 1 }}>{'перепелок'}</span>
             </div>
           </div>
-          <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
-            {/* Слева текст выполнено, если достижение выполнено */}
+          <div style={{ marginTop: `${8 * scaleFactor}px`, display: 'flex', alignItems: 'center', gap: `${10 * scaleFactor}px` }}>
             {randomAchievement.is_earned && (
-              <span style={{ fontSize: 11, color: '#410C00', minWidth: 80 }}>(Выполненно)</span>
+              <span style={{ fontSize: `${11 * scaleFactor}px`, color: '#410C00', minWidth: `${80 * scaleFactor}px` }}>(Выполненно)</span>
             )}
-            <div style={{ flex: 1, width: '100%', height: 6, background: '#F3ECE4', borderRadius: 3, overflow: 'hidden' }}>
+            <div style={{ flex: 1, width: '100%', height: `${6 * scaleFactor}px`, background: '#F3ECE4', borderRadius: `${3 * scaleFactor}px`, overflow: 'hidden' }}>
               <div style={{
                 width: randomAchievement.is_earned ? '100%' : '0%',
                 height: '100%',
                 background: '#410C00',
-                borderTopLeftRadius: 3,
-                borderBottomLeftRadius: 3,
-                borderTopRightRadius: randomAchievement.is_earned ? 0 : 3,
-                borderBottomRightRadius: randomAchievement.is_earned ? 0 : 3
+                borderTopLeftRadius: `${3 * scaleFactor}px`,
+                borderBottomLeftRadius: `${3 * scaleFactor}px`,
+                borderTopRightRadius: randomAchievement.is_earned ? 0 : `${3 * scaleFactor}px`,
+                borderBottomRightRadius: randomAchievement.is_earned ? 0 : `${3 * scaleFactor}px`
               }} />
             </div>
           </div>
@@ -592,14 +710,14 @@ function Home() {
       ) : null}
 
       {/* Летние новинки */}
-      <div style={{ padding: '0 16px' }}>
+      <div style={{ padding: `0 ${16 * scaleFactor}px` }}>
         <div style={{
-          fontSize: 32,
+          fontSize: `${32 * scaleFactor}px`,
           fontWeight: 400,
           color: '#410C00',
-          marginBottom: 16,
+          marginBottom: `${16 * scaleFactor}px`,
           fontFamily: 'Tiffany, bold',
-          width: 340,
+          width: isFoldInnerScreen ? '100%' : cardWidth,
           marginLeft: 'auto',
           marginRight: 'auto',
           textAlign: 'left',
@@ -608,101 +726,174 @@ function Home() {
           Летние новинки
         </div>
         {noveltyLoading ? (
-          <SummerNoveltySkeleton />
+          <SummerNoveltySkeleton scaleFactor={scaleFactor} />
         ) : noveltyItems.length > 0 ? (
-          noveltyItems.map(item => {
-            const inCart = cartItems.find(ci => ci.id === item.id);
-            return (
-              <div key={item.id} style={{
-                width: 340,
-                height: 118,
-                background: '#FFFBF7',
-                borderRadius: 7,
-                boxShadow: '0 2px 8px #0001',
-                display: 'flex',
-                marginLeft: 'auto',
-                marginRight: 'auto',
-                flexDirection: 'row',
-                alignItems: 'stretch',
-                overflow: 'hidden',
-                marginBottom: 16,
-                padding: 0,
-              }}
-                onClick={() => setSelectedProduct(item)}
-              >
-                <img src={item.image_url || 'https://s234klg.storage.yandex.net/rdisk/dd165799b546145e86676b0aacac4b2d41f3ea0453ffd577e5e648e46a540f61/682ced58/OEOWJxOEUzw24FFHQhwUhUO6oxhIvquHlGfDPWJKNziue6YF-owovARHIR2IDDeLq8b9Hdj7b1PM1eGsMVerqA==?uid=0&filename=IMG_20250520_151328_102.jpg&disposition=inline&hash=&limit=0&content_type=image%2Fjpeg&owner_uid=0&fsize=49873&hid=19963f6f7ae29874eda8ea51b944752e&media_type=image&tknv=v3&etag=737218b6e0cb0f8661e617e75bc4f3df&ts=6359788940600&s=f33c70d189de2a01bb15ce3c4eadca30d21b002050556e928f8533b292ca1c59&pb=U2FsdGVkX1-I28UKyGRZfUwvGf30w275NNziH45l0lKK9gQk4h8kKuLkkayHvQPC3BQ14PZuG3Hxwzv3PwD4QcrGTB6CkptLTtOl-hK9MnI'} alt={item.name} style={{ width: 150, height: 100, objectFit: 'cover', borderRadius: 7, marginLeft: 10, marginTop: 10 }} />
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '12px 16px 12px 16px' }}>
-                  <div>
-                    <div style={{ fontSize: 12, fontWeight: 500, color: '#410C00', marginBottom: 4, textAlign: 'left', lineHeight: 1.1 }}>{item.name}</div>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 0 }}>
-                      <div style={{ fontSize: 27, fontWeight: 600, color: '#410C00', fontFamily: 'Tiffany, serif', lineHeight: 1 }}>
-                        {Math.floor(item.price)} <img src="/icons/rub.svg" alt="₽" style={{ width: 18, height: 17, marginLeft: -1, display: 'inline-block' }} />
-                        <div style={{ fontSize: 12, color: '#410C00', lineHeight: 1, marginTop: 2, fontWeight: 400, fontFamily: 'SF Pro Text, Arial, sans-serif' }}>
-                          {item.volume_weight_display}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: isFoldInnerScreen ? '100%' : 'auto',
+            margin: isFoldInnerScreen ? '0 auto' : '0',
+          }}>
+            {noveltyItems.map(item => {
+              const inCart = cartItems.find(ci => ci.id === item.id);
+              return (
+                <div key={item.id} style={{
+                  width: isFoldInnerScreen ? 'calc(100% - 32px)' : cardWidth,
+                  height: `${118 * scaleFactor}px`,
+                  background: '#FFFBF7',
+                  borderRadius: `${7 * scaleFactor}px`,
+                  boxShadow: '0 2px 8px #0001',
+                  display: 'flex',
+                  flexDirection: 'row',
+                  alignItems: 'stretch',
+                  overflow: 'hidden',
+                  marginBottom: `${16 * scaleFactor}px`,
+                  padding: 0,
+                }}
+                  onClick={() => setSelectedProduct(item)}
+                >
+                  <img 
+                    src={item.image_url} 
+                    alt={item.name} 
+                    style={{ 
+                      width: `${150 * scaleFactor}px`, 
+                      height: `${100 * scaleFactor}px`, 
+                      objectFit: 'cover', 
+                      borderRadius: `${7 * scaleFactor}px`, 
+                      marginLeft: `${10 * scaleFactor}px`, 
+                      marginTop: `${10 * scaleFactor}px`,
+                      display: 'block',
+                    }} 
+                  />
+                  <div style={{ 
+                    flex: 1, 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    justifyContent: 'space-between', 
+                    padding: `${12 * scaleFactor}px ${16 * scaleFactor}px ${12 * scaleFactor}px ${16 * scaleFactor}px` 
+                  }}>
+                    <div>
+                      <div style={{ 
+                        fontSize: `${12 * scaleFactor}px`, 
+                        fontWeight: 500, 
+                        color: '#410C00', 
+                        marginBottom: `${4 * scaleFactor}px`, 
+                        textAlign: 'left', 
+                        lineHeight: 1.1 
+                      }}>{item.name}</div>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: `${8 * scaleFactor}px`, marginBottom: 0 }}>
+                        <div style={{ 
+                          fontSize: `${27 * scaleFactor}px`, 
+                          fontWeight: 600, 
+                          color: '#410C00', 
+                          fontFamily: 'Tiffany, serif', 
+                          lineHeight: 1 
+                        }}>
+                          {Math.floor(item.price)} 
+                          <img 
+                            src="/icons/rub.svg" 
+                            alt="₽" 
+                            style={{ 
+                              width: `${18 * scaleFactor}px`, 
+                              height: `${17 * scaleFactor}px`, 
+                              marginLeft: `${-1 * scaleFactor}px`, 
+                              display: 'inline-block' 
+                            }} 
+                          />
+                          <div style={{ 
+                            fontSize: `${12 * scaleFactor}px`, 
+                            color: '#410C00', 
+                            lineHeight: 1, 
+                            marginTop: `${2 * scaleFactor}px`, 
+                            fontWeight: 400, 
+                            fontFamily: 'SF Pro Text, Arial, sans-serif' 
+                          }}>
+                            {item.volume_weight_display}
+                          </div>
                         </div>
+                        <div style={{ 
+                          fontSize: `${16 * scaleFactor}px`, 
+                          color: '#8B6F53', 
+                          lineHeight: 1 
+                        }}>{item.volume_with_unit}</div>
                       </div>
-                      <div style={{ fontSize: 16, color: '#8B6F53', lineHeight: 1 }}>{item.volume_with_unit}</div>
+                    </div>
+                    <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'flex-end', height: `${22 * scaleFactor}px` }}>
+                      {inCart ? (
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: `${8 * scaleFactor}px`, 
+                          width: '100%', 
+                          background: '#410C00', 
+                          borderRadius: `${5 * scaleFactor}px`, 
+                          justifyContent: 'center' 
+                        }}>
+                          <button onClick={(e) => { e.stopPropagation(); changeCartItemCount(item.id, -1); }} style={{ 
+                            width: `${36 * scaleFactor}px`, 
+                            height: `${22 * scaleFactor}px`, 
+                            borderRadius: `${8 * scaleFactor}px`, 
+                            border: 0, 
+                            background: 'none', 
+                            color: '#FFFBF7', 
+                            fontSize: `${18 * scaleFactor}px`, 
+                            fontWeight: 500, 
+                            cursor: 'pointer', 
+                            lineHeight: 1,
+                            WebkitTapHighlightColor: 'transparent',
+                            tapHighlightColor: 'transparent'
+                          }}>-</button>
+                          <span style={{ 
+                            fontSize: `${15 * scaleFactor}px`, 
+                            fontWeight: 500, 
+                            minWidth: `${28 * scaleFactor}px`, 
+                            textAlign: 'center', 
+                            color: '#FFFBF7' 
+                          }}>{inCart.count}</span>
+                          <button onClick={(e) => { e.stopPropagation(); changeCartItemCount(item.id, 1); }} style={{ 
+                            width: `${36 * scaleFactor}px`, 
+                            height: `${22 * scaleFactor}px`, 
+                            borderRadius: `${8 * scaleFactor}px`, 
+                            border: 0, 
+                            background: 'none', 
+                            color: '#FFFBF7', 
+                            fontSize: `${18 * scaleFactor}px`, 
+                            fontWeight: 500, 
+                            cursor: 'pointer', 
+                            lineHeight: 1,
+                            WebkitTapHighlightColor: 'transparent',
+                            tapHighlightColor: 'transparent'
+                          }}>+</button>
+                        </div>
+                      ) : (
+                        <button
+                          style={{
+                            width: '100%',
+                            height: `${22 * scaleFactor}px`,
+                            border: `1px solid #410C00`,
+                            borderRadius: `${5 * scaleFactor}px`,
+                            background: 'none',
+                            color: '#410C00',
+                            fontWeight: 600,
+                            fontSize: `${11 * scaleFactor}px`,
+                            cursor: 'pointer',
+                            transition: 'background 0.2s',
+                            padding: 0,
+                            lineHeight: 1,
+                            WebkitTapHighlightColor: 'transparent',
+                            tapHighlightColor: 'transparent'
+                          }}
+                          onClick={(e) => { e.stopPropagation(); addToCart(item); }}
+                        >В корзину</button>
+                      )}
                     </div>
                   </div>
-                  <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'flex-end', height: 22 }}>
-                    {inCart ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', background: '#410C00', borderRadius: 5, justifyContent: 'center' }}>
-                        <button onClick={(e) => { e.stopPropagation(); changeCartItemCount(item.id, -1); }} style={{ 
-                          width: 36, 
-                          height: 22, 
-                          borderRadius: 8, 
-                          border: 0, 
-                          background: 'none', 
-                          color: '#FFFBF7', 
-                          fontSize: 18, 
-                          fontWeight: 500, 
-                          cursor: 'pointer', 
-                          lineHeight: 1,
-                          WebkitTapHighlightColor: 'transparent',
-                          tapHighlightColor: 'transparent'
-                        }}>-</button>
-                        <span style={{ fontSize: 15, fontWeight: 500, minWidth: 28, textAlign: 'center', color: '#FFFBF7' }}>{inCart.count}</span>
-                        <button onClick={(e) => { e.stopPropagation(); changeCartItemCount(item.id, 1); }} style={{ 
-                          width: 36, 
-                          height: 22, 
-                          borderRadius: 8, 
-                          border: 0, 
-                          background: 'none', 
-                          color: '#FFFBF7', 
-                          fontSize: 18, 
-                          fontWeight: 500, 
-                          cursor: 'pointer', 
-                          lineHeight: 1,
-                          WebkitTapHighlightColor: 'transparent',
-                          tapHighlightColor: 'transparent'
-                        }}>+</button>
-                      </div>
-                    ) : (
-                      <button
-                        style={{
-                          width: '100%',
-                          height: 22,
-                          border: '1px solid #410C00',
-                          borderRadius: 5,
-                          background: 'none',
-                          color: '#410C00',
-                          fontWeight: 600,
-                          fontSize: 11,
-                          cursor: 'pointer',
-                          transition: 'background 0.2s',
-                          padding: 0,
-                          lineHeight: 1,
-                          WebkitTapHighlightColor: 'transparent',
-                          tapHighlightColor: 'transparent'
-                        }}
-                        onClick={(e) => { e.stopPropagation(); addToCart(item); }}
-                      >В корзину</button>
-                    )}
-                  </div>
                 </div>
-              </div>
-            );
-          })
+              );
+            })}
+          </div>
         ) : null}
       </div>
 
@@ -712,6 +903,11 @@ function Home() {
         inCart={cartItems.find(ci => ci.id === selectedProduct?.id)}
         onAdd={addToCart}
         onChangeCount={changeCartItemCount}
+        scaleFactor={scaleFactor}
+        isFoldInnerScreen={isFoldInnerScreen}
+        isIPad={isIPad}
+        imageWidth={imageWidth}
+        imageHeight={imageHeight}
       />
     </div>
   );
