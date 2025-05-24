@@ -30,6 +30,9 @@ export function AppProvider({ children }) {
     }
   });
 
+  const [mode, setMode] = useState('table');
+  const [tableNumber, setTableNumber] = useState('');
+
   // Добавить товар в корзину
   const addToCart = (dish) => {
     setCartItems(prev => {
@@ -168,6 +171,10 @@ export function AppProvider({ children }) {
     changeCartItemCount,
     removeFromCart,
     clearCart,
+    mode,
+    setMode,
+    tableNumber,
+    setTableNumber
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

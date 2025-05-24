@@ -94,6 +94,8 @@ function NavigationBar({ currentTab, onTabChange, cartRef }) {
   const [error, setError] = useState(null);
   const total = cartItems.reduce((sum, item) => sum + (item.price * item.count), 0);
 
+  const isButtonDisabled = loading || cartItems.length === 0 || (mode === 'table' && (!tableNumber || Number(tableNumber) === 0));
+
   const handleTabClick = (key) => {
     onTabChange(key);
     if (currentTab === key) {
@@ -102,12 +104,14 @@ function NavigationBar({ currentTab, onTabChange, cartRef }) {
   };
 
   const handleOrder = async () => {
+    if (isButtonDisabled) return;
+    
     setLoading(true);
     setError(null);
     try {
       const orderPayload = {
-        user_id: 0, // если есть user_id, подставьте
-        restaurant_id: 1, // если есть другой id, подставьте
+        user_id: 0,
+        restaurant_id: 1,
         status: 'pending',
         total_amount: total,
         items: cartItems.map(item => ({
@@ -117,11 +121,6 @@ function NavigationBar({ currentTab, onTabChange, cartRef }) {
         }))
       };
       if (mode === 'table') {
-        if (!tableNumber || Number(tableNumber) === 0) {
-          setError('Введите номер стола');
-          setLoading(false);
-          return;
-        }
         orderPayload.table_id = Number(tableNumber);
       }
       const initData = window.Telegram?.WebApp?.initData || '';
@@ -129,7 +128,15 @@ function NavigationBar({ currentTab, onTabChange, cartRef }) {
       clearCart && clearCart();
       cartRef.current?.handleOrderSuccess();
     } catch (e) {
-      setError('Ошибка при оформлении заказа. Попробуйте еще раз.');
+      let errorMessage = 'Ошибка при оформлении заказа';
+      if (mode === 'table') {
+        errorMessage = 'Ошибка при оформлении заказа: номер стола указан неверно';
+      }
+      window.Telegram?.WebApp?.showPopup?.({
+        title: 'Ошибка',
+        message: errorMessage,
+        buttons: [{ type: 'ok' }]
+      });
     } finally {
       setLoading(false);
     }
@@ -137,12 +144,12 @@ function NavigationBar({ currentTab, onTabChange, cartRef }) {
 
   return (
     <nav style={navStyle}>
-      {currentTab === 'cart' && cartItems.length > 0 ? (
+      {currentTab === 'cart' ? (
         <button
           onClick={handleOrder}
-          disabled={loading || (mode === 'table' && (!tableNumber || Number(tableNumber) === 0))}
+          disabled={isButtonDisabled}
           style={{
-            background: '#3B1707',
+            background: isButtonDisabled ? '#E5DED6' : '#3B1707',
             color: '#fff',
             fontSize: 20,
             fontWeight: 400,
@@ -152,14 +159,14 @@ function NavigationBar({ currentTab, onTabChange, cartRef }) {
             height: 46,
             margin: '0 auto',
             boxShadow: '0 2px 8px #0002',
-            cursor: loading ? 'not-allowed' : 'pointer',
+            cursor: isButtonDisabled ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: 10,
             WebkitTapHighlightColor: 'transparent',
             tapHighlightColor: 'transparent',
-            opacity: loading ? 0.7 : 1,
+            opacity: 1,
             position: 'relative',
           }}
         >
@@ -168,9 +175,29 @@ function NavigationBar({ currentTab, onTabChange, cartRef }) {
           ) : (
             <>
               <span>Оформить заказ  ·</span>
-              <span style={{ fontFamily: 'Tiffany, serif', fontSize: 22, fontWeight: 400, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ 
+                fontFamily: 'Tiffany, serif', 
+                fontSize: 22, 
+                fontWeight: 400, 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 4,
+                color: '#fff'
+              }}>
                 {total}
-                <img src="/icons/rub.svg" alt="₽" style={{ width: 16, height: 15, marginLeft: 2, marginTop: -1, display: 'inline-block', verticalAlign: 'middle', filter: 'brightness(0) saturate(100%) invert(1)' }} />
+                <img 
+                  src="/icons/rub.svg" 
+                  alt="₽" 
+                  style={{ 
+                    width: 16, 
+                    height: 15, 
+                    marginLeft: 2, 
+                    marginTop: -1, 
+                    display: 'inline-block', 
+                    verticalAlign: 'middle',
+                    filter: 'brightness(0) saturate(100%) invert(1)'
+                  }} 
+                />
               </span>
             </>
           )}
@@ -186,7 +213,6 @@ function NavigationBar({ currentTab, onTabChange, cartRef }) {
           </button>
         ))
       )}
-      {error && <div style={{ color: '#B00020', fontSize: 14, position: 'absolute', bottom: 60, left: 0, right: 0, textAlign: 'center' }}>{error}</div>}
     </nav>
   );
 }

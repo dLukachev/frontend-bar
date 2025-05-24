@@ -666,7 +666,7 @@ function BookingDetailsModal({ onClose, tableInfo, tableSlots }) {
     setTouchStart(null);
   };
 
-  const handleBookTime = async () => { // Made async to await post request
+  const handleBookTime = async () => {
       const errors = {};
       if (!name.trim()) {
           errors.name = 'Имя обязательно';
@@ -674,80 +674,95 @@ function BookingDetailsModal({ onClose, tableInfo, tableSlots }) {
       if (!phone.trim()) {
           errors.phone = 'Телефон обязателен';
       }
-      // Check if guests is a positive number
+      // Check if guests is a positive number and not exceeding max guests
       const guestsNum = parseInt(guests, 10);
+      const maxGuests = tableInfo?.max_guests || 4;
       if (!guests || isNaN(guestsNum) || guestsNum <= 0) {
           errors.guests = 'Количество гостей обязательно и должно быть больше 0';
+      } else if (guestsNum > maxGuests) {
+          errors.guests = `Количество гостей не может превышать ${maxGuests} человек`;
       }
       if (!selectedSlot) {
           errors.selectedSlot = 'Выберите время';
       }
 
       if (Object.keys(errors).length > 0) {
-          setFormErrors(errors);
-          // Optionally highlight fields or show a general error message
-          console.error('Form validation errors:', errors);
+          // Формируем информативное сообщение об ошибках
+          let errorMessage = 'Пожалуйста, исправьте следующие ошибки:\n\n';
+          if (errors.name) errorMessage += `• ${errors.name}\n`;
+          if (errors.phone) errorMessage += `• ${errors.phone}\n`;
+          if (errors.guests) errorMessage += `• ${errors.guests}\n`;
+          if (errors.selectedSlot) errorMessage += `• ${errors.selectedSlot}\n`;
+
+          window.Telegram?.WebApp?.showPopup?.({
+              title: 'Ошибка заполнения',
+              message: errorMessage,
+              buttons: [{ type: 'ok' }]
+          });
           return;
       }
 
       setFormErrors({}); // Clear previous errors
 
       // Format reservation_time
-      // Using hardcoded date 2025-05-24 for now as per instructions
-      // In a real app, this would come from the date selector
       const reservationDate = '2025-05-24';
-      const reservationTimeISO = `${reservationDate}T${selectedSlot.start}:00Z`; // Assuming slot.start is like "HH:mm"
+      const reservationTimeISO = `${reservationDate}T${selectedSlot.start}:00Z`;
 
       const bookingPayload = {
-          restaurant_id: 1, // Assuming restaurant_id is 1
+          restaurant_id: 1,
           table_id: tableInfo?.id,
           reservation_time: reservationTimeISO,
-          duration: 120, // as per instructions
+          duration: 120,
           guest_count: guestsNum,
-          contact_name: name.trim(), // Add contact_name from name state
-          contact_phone: phone.trim(), // Add contact_phone from phone state
-          special_requests: wishes.trim() || null, // Use null if wishes is empty
-          is_recurring: false, // Assuming not recurring for now
-          recurring_pattern: null // Assuming no recurring pattern
+          contact_name: name.trim(),
+          contact_phone: phone.trim(),
+          special_requests: wishes.trim() || null,
+          is_recurring: false,
+          recurring_pattern: null
       };
 
       try {
-          // TODO: Implement actual booking API call here
-          console.log('Attempting to book with payload:', bookingPayload);
           const response = await post(
               '/reservations',
               getInitData(),
               bookingPayload
-              // Add headers if necessary, e.g., Authorization
           );
           console.log('Booking successful:', response);
-          // Assuming booking API call is successful, close modal
           handleClose();
 
-          // Clear cached table availability data for all time slots for the current date
+          // Clear cached table availability data
           timeSlots.forEach(slot => {
             const { start, end } = getSlotTimes(slot);
             const key = `/reservations/tables/slot-availability?restaurant_id=1&date=${selectedDate}&slot_start=${start}&slot_end=${end}`;
             delete cache[key];
           });
 
-          // Clear cache for the specific table's slots
           const tableSlotsKey = `/reservations/tables/${tableInfo.id}/slots?date=${selectedDate}`;
           delete cache[tableSlotsKey];
 
-          // Also clear cache for slots of all tables currently in tablesAvailability
-          // This ensures when any table modal is opened, it fetches fresh slot data
           tablesAvailability.forEach(table => {
               const key = `/reservations/tables/${table.id}/slots?date=${selectedDate}`;
               delete cache[key];
           });
 
-          // Fetch fresh data for the currently active slot (for the main SVG view)
           fetchTablesAvailability(timeSlots[activeSlot], true);
 
       } catch (error) {
           console.error('Booking failed:', error);
-          // TODO: Handle booking error (show message to user)
+          let errorMessage = 'Ошибка при бронировании стола';
+          
+          // Добавляем более конкретное сообщение об ошибке в зависимости от типа ошибки
+          if (error.response?.status === 409) {
+              errorMessage = 'Этот стол уже забронирован на выбранное время. Пожалуйста, выберите другое время.';
+          } else if (error.response?.status === 400) {
+              errorMessage = 'Некорректные данные бронирования. Пожалуйста, проверьте введенную информацию.';
+          }
+
+          window.Telegram?.WebApp?.showPopup?.({
+              title: 'Ошибка бронирования',
+              message: errorMessage,
+              buttons: [{ type: 'ok' }]
+          });
       }
   };
 
@@ -880,13 +895,26 @@ function BookingDetailsModal({ onClose, tableInfo, tableSlots }) {
                     onChange={(e) => setName(e.target.value)}
                     style={{ flex: 1, height: 44}} // Use flex: 1 to distribute width
                 />
-                 <FloatingLabelInput
-                    label="Гостей"
-                    value={guests}
-                    onChange={(e) => setGuests(e.target.value)}
-                    style={{ width: 134, height: 44 }}
-                    type="number" // Assuming guests is a number
-                />
+                 <div style={{ position: 'relative', width: 134 }}>
+                    <FloatingLabelInput
+                        label="Гостей"
+                        value={guests}
+                        onChange={(e) => setGuests(e.target.value)}
+                        style={{ width: '100%', height: 44 }}
+                        type="number"
+                    />
+                    <div style={{
+                        position: 'absolute',
+                        left: 16,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        fontSize: 11,
+                        color: '#9B8169',
+                        pointerEvents: 'none'
+                    }}>
+                        До {tableInfo?.max_guests || 4}
+                    </div>
+                </div>
             </div>
              <FloatingLabelInput
                 label="Телефон"
@@ -922,7 +950,7 @@ function BookingDetailsModal({ onClose, tableInfo, tableSlots }) {
                     fontSize: 19,
                     cursor: 'pointer',
                     fontFamily: 'SF Pro Text, sans-serif',
-                     fontWeight: 500
+                    fontWeight: 500
                 }}
             >
                 Забронировать
@@ -963,7 +991,12 @@ function CalendarModal({ selectedDate, onSelectDate, onClose }) {
   };
 
   const handleNextMonth = () => {
-    setCurrentMonth(currentMonth.add(1, 'month'));
+    const maxDate = dayjs().add(2, 'month');
+    const newMonth = currentMonth.add(1, 'month');
+    if (newMonth.isAfter(maxDate, 'month')) {
+      return;
+    }
+    setCurrentMonth(newMonth);
   };
 
   const daysInMonth = currentMonth.daysInMonth();
@@ -978,7 +1011,14 @@ function CalendarModal({ selectedDate, onSelectDate, onClose }) {
   }
   // Add days of the month
   for (let i = 1; i <= daysInMonth; i++) {
-    days.push(dayjs(startOfMonth).date(i));
+    const day = dayjs(startOfMonth).date(i);
+    // Проверяем, не выходит ли дата за пределы допустимого диапазона
+    const maxDate = dayjs().add(2, 'month').endOf('month');
+    if (day.isAfter(maxDate)) {
+      days.push(null);
+    } else {
+      days.push(day);
+    }
   }
 
   return (

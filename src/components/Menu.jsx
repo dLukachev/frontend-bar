@@ -414,6 +414,8 @@ function Menu({ setTab }) {
                       height: 3,
                       background: '#410C00',
                       borderRadius: 4,
+                      marginLeft: 'auto',
+                      marginRight: 'auto',
                     }} />
                   )}
                 </div>

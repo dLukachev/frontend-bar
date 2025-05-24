@@ -17,9 +17,7 @@ function TiffanyFontTag() {
 }
 
 const Cart = forwardRef(function Cart({ setTab }, ref) {
-  const { cartItems, changeCartItemCount, addToCart, categories, dishes, clearCart } = useApp();
-  const [mode, setMode] = React.useState('table'); // 'table' или 'takeaway'
-  const [tableNumber, setTableNumber] = React.useState('');
+  const { cartItems, changeCartItemCount, addToCart, categories, dishes, clearCart, mode, setMode, tableNumber, setTableNumber } = useApp();
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [loading, setLoading] = React.useState(false);

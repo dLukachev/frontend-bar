@@ -456,7 +456,6 @@ function CollectionSection({ orders, onClose }) {
           </div>
         );
       })}
-      <ProfileCloseButton onClick={onClose} />
     </div>
   );
 }
