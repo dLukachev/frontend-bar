@@ -6,10 +6,16 @@ import { useApp } from '../context/AppContext';
 
 function getTelegramInitData() {
   try {
-    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
-      return window.Telegram.WebApp.initDataUnsafe.user || {};
+    console.log('Telegram WebApp available:', !!window.Telegram?.WebApp);
+    console.log('initDataUnsafe available:', !!window.Telegram?.WebApp?.initDataUnsafe);
+    console.log('User data:', window.Telegram?.WebApp?.initDataUnsafe?.user);
+    
+    if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
+      return window.Telegram.WebApp.initDataUnsafe.user;
     }
-  } catch {}
+  } catch (error) {
+    console.error('Error getting Telegram user data:', error);
+  }
   return {};
 }
 
@@ -64,22 +70,31 @@ export function useUserData() {
     const load = async () => {
       setIsLoading(true);
       setError(false);
+      // Проверяем кэш
       if (userDataCache.data && Date.now() - userDataCache.timestamp < 600000) {
+        console.log('Using cached userData:', userDataCache.data);
         setUserData(userDataCache.data);
         setIsLoading(false);
         return;
       }
       const initData = window.Telegram?.WebApp?.initData || '';
       try {
+        console.log('Fetching user data from API...');
         const response = await get('/users/me', initData);
+        console.log('API response:', response);
         if (response && response.user) {
           userDataCache.data = response.user;
           userDataCache.timestamp = Date.now();
-          if (!ignore) setUserData(response.user);
+          if (!ignore) {
+            console.log('Setting new userData:', response.user);
+            setUserData(response.user);
+          }
         } else {
+          console.log('Invalid API response:', response);
           if (!ignore) setError(true);
         }
-      } catch {
+      } catch (error) {
+        console.error('Error fetching user data:', error);
         if (!ignore) setError(true);
       } finally {
         if (!ignore) setIsLoading(false);
@@ -91,6 +106,7 @@ export function useUserData() {
 
   // Функция для сброса кэша и обновления
   const refresh = async () => {
+    console.log('Refreshing user data...');
     userDataCache.data = null;
     userDataCache.timestamp = 0;
     setIsLoading(true);
@@ -98,6 +114,7 @@ export function useUserData() {
     const initData = window.Telegram?.WebApp?.initData || '';
     try {
       const response = await get('/users/me', initData);
+      console.log('Refresh API response:', response);
       if (response && response.user) {
         userDataCache.data = response.user;
         userDataCache.timestamp = Date.now();
@@ -105,7 +122,8 @@ export function useUserData() {
       } else {
         setError(true);
       }
-    } catch {
+    } catch (error) {
+      console.error('Error refreshing user data:', error);
       setError(true);
     } finally {
       setIsLoading(false);
@@ -158,14 +176,39 @@ export function useOrdersCache() {
 
 function QRSection({ onClose }) {
   const tgUser = useMemo(getTelegramInitData, []);
-  const userId = tgUser.id || null; // Реальный ID или null если недоступен
-  const [qrValue, setQrValue] = useState(`user_id:${userId || 'demo'}`);
-  const [displayCode, setDisplayCode] = useState('L42ZA6E'); // Код для показа пользователю
+  const [qrValue, setQrValue] = useState(null);
+  const [userUniqueCode, setUserUniqueCode] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [touchStart, setTouchStart] = useState(null);
   const [touchY, setTouchY] = useState(0);
   const sheetRef = useRef(null);
+  
+  // Загрузка данных пользователя из API
+  useEffect(() => {
+    const initData = window.Telegram?.WebApp?.initData || '';
+    
+    setIsLoading(true);
+    setError(false);
+    
+    get('/users/me', initData)
+      .then(response => {
+        if (response && response.user && response.user.unique_code) {
+          setUserUniqueCode(response.user.unique_code);
+          setQrValue(response.user.unique_code);
+        } else {
+          setError(true);
+        }
+      })
+      .catch(() => {
+        setError(true);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, []);
   
   // Показываем модалку после рендера
   useEffect(() => {
@@ -173,12 +216,6 @@ function QRSection({ onClose }) {
       setIsVisible(true);
     });
   }, []);
-  
-  const refreshQRCode = () => {
-    // Обновляем данные QR-кода с новой временной меткой для имитации обновления
-    const newQrValue = `user_id:${userId || 'demo'}:${Date.now()}`;
-    setQrValue(newQrValue);
-  };
   
   const handleClose = () => {
     setIsClosing(true);
@@ -297,13 +334,34 @@ function QRSection({ onClose }) {
           position: 'relative'
         }}>
           <QRCodeSVG 
-            value={qrValue} 
+            value={qrValue || ''} 
             size={250} 
             level="H" 
             style={{
-              opacity: userId ? 1 : 0.5
+              opacity: qrValue ? 1 : 0.5
             }}
           />
+          
+          {!qrValue && (
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              background: 'rgba(255, 255, 255, 0.7)',
+              borderRadius: '20px',
+              fontSize: '16px',
+              color: '#8B6F53',
+              textAlign: 'center',
+              padding: '0 30px'
+            }}>
+              {isLoading ? 'Загрузка...' : 'QR-код недоступен'}
+            </div>
+          )}
         </div>
         
         <h2 style={{
@@ -314,7 +372,9 @@ function QRSection({ onClose }) {
           textAlign: 'center',
           fontFamily: 'SF Pro Text, sans-serif',
         }}>
-          {displayCode}
+          {isLoading ? 
+            "Загрузка..." : 
+            (userUniqueCode || "Код недоступен")}
         </h2>
         
         <p style={{
@@ -1268,9 +1328,6 @@ function Profile({ currentTab, setMainTab }) {
 
 // QR Modal component for overlay
 function QRModal({ onClose }) {
-  const tgUser = useMemo(getTelegramInitData, []);
-  const userId = tgUser.id || null; // Реальный ID или null если недоступен
-  const [qrValue] = useState(`user_id:${userId || 'demo'}`);
   const [userUniqueCode, setUserUniqueCode] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -1427,15 +1484,15 @@ function QRModal({ onClose }) {
           position: 'relative'
         }}>
           <QRCodeSVG 
-            value={qrValue} 
+            value={userUniqueCode || ''} 
             size={250} 
             level="H" 
             style={{
-              opacity: userId ? 1 : 0.5
+              opacity: userUniqueCode ? 1 : 0.5
             }}
           />
           
-          {!userId && (
+          {!userUniqueCode && (
             <div style={{
               position: 'absolute',
               top: 0,
@@ -1452,7 +1509,7 @@ function QRModal({ onClose }) {
               textAlign: 'center',
               padding: '0 30px'
             }}>
-              QR-код недоступен
+              {isLoading ? 'Загрузка...' : 'QR-код недоступен'}
             </div>
           )}
         </div>
